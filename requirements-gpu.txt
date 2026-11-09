@@ -1,1 +1,8 @@
-# VLM stack (M1). Pinned after the candidate models are tested on this machine.
+# VLM stack (Python 3.12, CUDA 13.0 wheels). Install with `make setup-gpu`.
+--extra-index-url https://download.pytorch.org/whl/cu130
+torch==2.14.1+cu130
+torchvision==0.29.1+cu130
+transformers==5.22.2
+accelerate==1.15.0
+bitsandbytes==0.50.2
+huggingface_hub

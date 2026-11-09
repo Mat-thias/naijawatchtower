@@ -1,0 +1,5 @@
+# Routing and decoding thresholds (CLAUDE.md 4.6, 4.7). Tune on R-dev only, never on R-test.
+field_conf_min: 0.90      # calibrated confidence every field needs for AUTO_OK
+repair_ratio_min: 5.0     # p(best) / p(second) needed to show a repair as a suggestion
+max_changes: 3            # fields a repair may change from the top-1 reading
+max_nodes: 50000          # search budget

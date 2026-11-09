@@ -41,6 +41,16 @@ Every decision taken without explicit instruction, with its reason. Matthias can
 | D17 | R-dev size is `ceil(25% × N)`, shared across states in proportion to their sheet counts; the split is frozen in `data_real/splits.json` on first run. | Reproducible and stratified; with 30 sheets this gives 8 dev, 22 test. |
 | D18 | Label entry is three lines per sheet: items 1–8 space-separated, non-blank party rows as `row=value`, then the bottom total (`-` blank, `?` illegible). Reconciliation against the reader is a separate later step. | Most party rows are blank, so typing only the filled rows is about 3× faster; labelling can start before the VLM exists. |
 
+## M1 reader decisions
+
+| id | decision | reason |
+|---|---|---|
+| D19 | **VLM candidates:** Qwen/Qwen3.5-9B (Feb 2026), Qwen/Qwen3-VL-8B-Instruct (Oct 2025), Qwen2.5-VL-7B-Instruct as fallback; all **Apache-2.0**. Newer Qwen generations (3.6, 3.8) and Gemma 4 come only as 26B+ models that do not fit 12 GB at 4-bit. | Best open-weight models that fit the VRAM budget with permissive licences (checked on Hugging Face 9 Nov 2026). |
+| D20 | **Constrained decoding by grammar** (`naijawatchtower/ocr/grammar.py`): the JSON skeleton is forced token by token; at each value the model may emit only digits (max 4, no leading zero), `null`, or the end of the number; the unclear list allows only field names. Output is compact JSON (no spaces). | Schema validity by construction (no retry path needed), clean per-field token probabilities, and sheet text cannot change the output structure (prompt-injection defence). |
+| D21 | **Field confidence** = product of the probabilities of the digit tokens *and* of the step that ends the number (or of the `null` token), renormalised over the allowed tokens. **Alternatives**: single-digit substitutions from the top-5 tokens per position, one digit shorter, one digit longer, and `null`; up to 6 per field. | Including the end-of-number step captures length uncertainty (e.g. 12 vs 120). |
+| D22 | 4-bit NF4 (double quantisation) for the language model; the **vision tower and output layer stay in bf16**; repetition penalty, sampling and top-k/top-p are switched off. | Quantising the output layer and vision encoder costs accuracy for little memory; a repetition penalty would distort digit probabilities for numbers such as 1100. |
+| D23 | Scripts never print values read from real sheets; smoke tests and evaluation print timing, VRAM and aggregate counts only. | Real-sheet results are reported only as aggregates (rule 10). |
+
 ## Real data received (9 Nov 2026)
 
 36 files downloaded by Matthias. Imported: **30** images (19 portal thumbnails at 1024 px wide, 10 single-JPEG PDFs from 678×944 up to 4096×3072, and `canvas.png`). Skipped: five PDFs containing only a 192×256 image, and a saved HTML page.
