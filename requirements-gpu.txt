@@ -1,0 +1,1 @@
+# VLM stack (M1). Pinned after the candidate models are tested on this machine.

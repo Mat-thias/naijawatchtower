@@ -1,0 +1,10 @@
+[project]
+name = "naijawatchtower"
+version = "0.1.0"
+description = "Digitise and cross-check polling-unit result sheets (unofficial PoC)"
+requires-python = ">=3.12"
+license = { text = "MIT" }
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]

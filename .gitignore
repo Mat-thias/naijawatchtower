@@ -1,0 +1,22 @@
+# REAL election data: never commit (CLAUDE.md rule 2)
+data_real/
+# Redacted copies: ignored until organisers confirm in writing (docs/ASSUMPTIONS.md D3)
+data_redacted/
+
+# Generated
+data/sim/
+*.db
+*.sqlite
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+*.egg-info/
+
+# Secrets
+.env
+
+# Guard: downloads saved at the root by mistake
+/images/

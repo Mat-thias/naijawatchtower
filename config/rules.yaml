@@ -1,0 +1,47 @@
+# Arithmetic rules (CLAUDE.md 4.5). Blank cells count as 0.
+# R1 is printed on the form; R2-R7 follow from what the items mean and must be
+# validated against the official form instructions and real labelled sheets.
+version: rules-v1
+rules:
+  - id: R1
+    severity: hard
+    kind: sum_equals
+    target: total_used_ballots
+    terms: [ballots_spoiled, votes_rejected, total_valid_votes]
+    message: "Total used ballots (item 8) should equal spoiled + rejected + total valid votes (items 5 + 6 + 7), as printed on the form."
+  - id: R2
+    severity: hard
+    kind: sum_equals
+    target: total_valid_votes
+    terms: [party_rows]
+    message: "The party rows should add up to total valid votes (item 7)."
+  - id: R3
+    severity: hard
+    kind: equals_if_present
+    target: total_valid_votes
+    field: total_valid_votes_bottom
+    message: "The total valid votes written below the party table should match item 7."
+  - id: R4
+    severity: hard
+    kind: sum_equals
+    target: ballots_issued
+    terms: [ballots_unused, total_used_ballots]
+    message: "Ballots issued (item 3) should equal unused + total used ballots (items 4 + 8)."
+  - id: R5
+    severity: hard
+    kind: less_equal
+    left: accredited_voters
+    right: registered_voters
+    message: "Accredited voters (item 2) should not exceed voters on the register (item 1)."
+  - id: R6
+    severity: hard
+    kind: range
+    min: 0
+    max: 9999
+    message: "Every figure should be blank or a whole number from 0 to 9999."
+  - id: R7
+    severity: soft
+    kind: sum_equals
+    target: accredited_voters
+    terms: [total_valid_votes, votes_rejected]
+    message: "Please check: total valid votes plus rejected ballots usually equals accredited voters."

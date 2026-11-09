@@ -1,0 +1,17 @@
+{
+  "version": "ec8a-v1",
+  "max_value": 9999,
+  "items": [
+    {"name": "registered_voters", "item": 1, "label": "Voters on the register"},
+    {"name": "accredited_voters", "item": 2, "label": "Accredited voters"},
+    {"name": "ballots_issued", "item": 3, "label": "Ballot papers issued"},
+    {"name": "ballots_unused", "item": 4, "label": "Unused ballot papers"},
+    {"name": "ballots_spoiled", "item": 5, "label": "Spoiled ballot papers"},
+    {"name": "votes_rejected", "item": 6, "label": "Rejected ballots"},
+    {"name": "total_valid_votes", "item": 7, "label": "Total valid votes"},
+    {"name": "total_used_ballots", "item": 8, "label": "Total used ballot papers"}
+  ],
+  "party_rows": 18,
+  "party_prefix": "party_",
+  "bottom_total": {"name": "total_valid_votes_bottom", "label": "Total valid votes (bottom row)"}
+}
