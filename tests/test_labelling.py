@@ -41,6 +41,9 @@ def test_parse_items_and_rows():
     for bad in ["19=5", "x=5", "5"]:
         with pytest.raises(ValueError):
             parse_party_rows(bad)
+    zeros = parse_party_rows("*0 6=120 14=-")                 # every unlisted row has 0 written
+    assert zeros["party_06"] == 120 and zeros["party_14"] is None and zeros["party_01"] == 0
+    assert sum(v == 0 for v in zeros.values()) == 16
 
 
 def test_label_then_reconcile_end_to_end(pattern_image):

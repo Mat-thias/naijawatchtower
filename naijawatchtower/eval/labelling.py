@@ -56,9 +56,11 @@ def parse_items(line: str) -> dict[str, Label]:
 
 
 def parse_party_rows(line: str) -> dict[str, Label]:
-    """Parse the non-blank party rows typed as 'row=value' pairs; all others are blank."""
-    rows: dict[str, Label] = {name: None for name in party_fields()}
-    for pair in line.split():
+    """Parse party rows typed as 'row=value' pairs. Unlisted rows are blank, or 0 if '*0' is typed."""
+    tokens = line.split()
+    default: Label = 0 if "*0" in tokens else None
+    rows: dict[str, Label] = {name: default for name in party_fields()}
+    for pair in (tok for tok in tokens if tok != "*0"):
         if "=" not in pair:
             raise ValueError(f"expected row=value, got {pair!r}")
         row_txt, value_txt = pair.split("=", 1)
@@ -207,7 +209,8 @@ def label_sheet(ask: Ask, say: Say) -> tuple[int, dict[str, Label]]:
         labels.update(_ask_until_valid(  # type: ignore[arg-type]
             ask, say, "Items 1-8, space-separated ('-' blank, '?' illegible): ", parse_items))
         labels.update(_ask_until_valid(  # type: ignore[arg-type]
-            ask, say, "Non-blank party rows as row=value (e.g. '2=120 14=37'), Enter if none: ",
+            ask, say, "Party rows as row=value (e.g. '2=120 14=37'); add *0 if every other row has 0 written; "
+                      "Enter if all blank: ",
             parse_party_rows))
         labels[bottom_total_field()] = _ask_until_valid(  # type: ignore[assignment]
             ask, say, "Bottom 'TOTAL VALID VOTES' row (Enter or '-' if blank): ", parse_value)
