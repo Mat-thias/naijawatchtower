@@ -13,6 +13,11 @@ from naijawatchtower.config import state_by_number
 from naijawatchtower.ocr.types import SheetReading
 from naijawatchtower.sim.election import SimUnit
 
+# Demo accounts (fictional numbers in the 0800 range); quick sign-in only when NWT_DEMO_MODE=1.
+DEMO_PHONES = {"citizen": "08000000101", "citizen_2": "08000000102", "citizen_3": "08000000103",
+               "observer": "08000000201", "reviewer": "08000000301", "ingest": "08000000401",
+               "admin": "08000000501"}
+
 
 def add_sim_unit(db: Session, u: SimUnit) -> PollingUnit:
     """Insert a simulated unit (9NN code)."""

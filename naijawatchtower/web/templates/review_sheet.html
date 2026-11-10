@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% from "_macros.html" import status_pill %}
+{% block title %}{{ t('web.review.sheet_title', id=s.id) }}{% endblock %}
+{% block content %}
+<p class="small"><a href="/review">← {{ t('web.review.title') }}</a> · <a href="/sheet/{{ s.id }}">{{ t('web.sheet.title', id=s.id) }}</a></p>
+<h1>{{ t('web.review.sheet_title', id=s.id) }} {{ status_pill(s.status, t) }}</h1>
+{% if error %}<p class="notice" role="alert">{{ error }}</p>{% endif %}
+<div class="grid-2">
+  <section>
+    {% if s.image_url %}<img class="sheet-image" src="{{ s.image_url }}" alt="{{ t('web.sheet.image_alt') }}">
+    {% else %}<div class="sim-panel">{{ t('web.sheet.simulated_panel') }}</div>{% endif %}
+    {% set failed = s.rules | rejectattr('passed') | list %}
+    {% for r in failed %}<div class="rule {% if r.severity == 'soft' %}soft{% endif %}">{{ r.message }}</div>{% endfor %}
+    {% if s.detail.get('decoding') %}<p class="small muted">Decoding: {{ s.detail.decoding.outcome }}</p>{% endif %}
+  </section>
+  <form method="post" action="/review/{{ s.id }}" id="review-form" class="card">
+    <table>
+      <thead><tr><th scope="col">{{ t('web.sheet.field') }}</th><th scope="col">{{ t('web.sheet.value') }}</th></tr></thead>
+      <tbody>
+      {% for f in s.fields %}
+        <tr class="{% if f.low_confidence or f.unclear %}low{% endif %}">
+          <th scope="row"><label for="f_{{ f.name }}">{{ f.label }}</label>
+            {% if f.low_confidence %}<span class="flag">· {{ t('web.sheet.low') }}</span>{% endif %}
+            {% if f.has_suggestion %}<span class="small">· {{ t('web.review.suggested', v=f.suggestion if f.suggestion is not none else t('web.sheet.blank')) }}</span>{% endif %}</th>
+          <td><input id="f_{{ f.name }}" name="f_{{ f.name }}" type="number" min="0" max="9999" inputmode="numeric"
+                     value="{{ f.value if f.value is not none else '' }}" style="width:7em"></td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    <p><label for="reason">{{ t('web.review.reason') }}</label><br>
+      <select id="reason" name="reason_code" required><option value=""></option>
+        {% for code in reason_codes %}<option value="{{ code }}">{{ t('web.reason.' ~ code) }}</option>{% endfor %}</select></p>
+    <p><label for="note">{{ t('web.review.note') }}</label><br><textarea id="note" name="note" rows="2" cols="40"></textarea></p>
+    <p><button type="submit" name="decision" value="accept" id="btn-accept" class="secondary">{{ t('web.review.accept') }}</button>
+       <button type="submit" name="decision" value="modify" id="btn-modify">{{ t('web.review.modify') }}</button></p>
+    <p class="small muted">{{ t('web.review.keys') }}</p>
+  </form>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+document.addEventListener("keydown", e => {
+  if (e.target.matches("input, textarea, select")) return;
+  if (e.key === "a") document.getElementById("btn-accept").click();
+  if (e.key === "s") document.getElementById("btn-modify").click();
+});
+</script>
+{% endblock %}

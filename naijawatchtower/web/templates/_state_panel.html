@@ -1,0 +1,15 @@
+{% from "_macros.html" import coverage_groups, party_totals %}
+<h2 style="margin-top:4px"><a href="/state/{{ panel.code }}">{{ panel.name }}</a> <span class="muted small">{{ panel.zone }}</span></h2>
+{{ coverage_groups(panel, t) }}
+{% if panel.has_real_sheets %}<p class="notice">{{ t('web.state.no_party_real') }}</p>{% endif %}
+<h3>{{ t('web.state.lgas') }}</h3>
+{% if panel.lgas %}
+<table>
+  <thead><tr><th scope="col">{{ t('web.table.name') }}</th><th scope="col" class="num">{{ t('web.table.units') }}</th>
+    <th scope="col" class="num">{{ t('web.table.digitised') }}</th><th scope="col" class="num">{{ t('web.table.verified') }}</th></tr></thead>
+  <tbody>{% for l in panel.lgas %}
+    <tr><th scope="row"><a href="/lga/{{ l.code }}">{{ l.name }}</a></th><td class="num">{{ l.expected }}</td>
+      <td class="num">{{ l.digitised }}</td><td class="num">{{ l.verified }}</td></tr>{% endfor %}
+  </tbody>
+</table>
+{% else %}<p class="muted">{{ t('web.source.none') }}</p>{% endif %}

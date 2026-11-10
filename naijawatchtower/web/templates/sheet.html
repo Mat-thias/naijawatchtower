@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% from "_macros.html" import status_pill %}
+{% block title %}{{ t('web.sheet.title', id=s.id) }}{% endblock %}
+{% block head %}{% if s.status == 'PROCESSING' %}<meta http-equiv="refresh" content="3">{% endif %}{% endblock %}
+{% block content %}
+<nav aria-label="Breadcrumb" class="small">
+  <a href="/">{{ t('web.breadcrumb.national') }}</a> › <a href="/state/{{ s.unit.state_code }}">{{ s.unit.state }}</a> ›
+  <a href="/lga/{{ s.unit.state_code }}-{{ s.unit.lga_code }}">{{ s.unit.lga }}</a> ›
+  <a href="/ward/{{ s.unit.state_code }}-{{ s.unit.lga_code }}-{{ s.unit.ra_code }}">{{ s.unit.ward }}</a> ›
+  <a href="/pu/{{ s.unit.code }}">{{ s.unit.name }}</a> › <span aria-current="page">{{ t('web.sheet.title', id=s.id) }}</span>
+</nav>
+<h1>{{ t('web.sheet.title', id=s.id) }} {{ status_pill(s.status, t) }}</h1>
+<p class="lede">{{ t('web.sheet.unit', code=s.unit.numeric_code, name=s.unit.name, ward=s.unit.ward, lga=s.unit.lga, state=s.unit.state) }}</p>
+{% if flash %}<p class="success" role="status">{{ flash }}</p>{% endif %}
+{% if error %}<p class="notice" role="alert">{{ error }}</p>{% endif %}
+{% if s.status == 'PROCESSING' %}<p class="notice" role="status">{{ t('web.sheet.processing') }}</p>{% endif %}
+
+<div class="grid-2">
+  <section aria-labelledby="img-h">
+    <h2 id="img-h" style="margin-top:0">{{ t('web.sheet.source_image') }}</h2>
+    {% if s.image_url %}
+      <a href="{{ s.image_url }}"><img class="sheet-image" src="{{ s.image_url }}" alt="{{ t('web.sheet.image_alt') }}"></a>
+      <p class="small muted">{{ t('web.sheet.hash') }}: <span class="hash">{{ s.image_sha256 }}</span></p>
+    {% else %}
+      <div class="sim-panel">{{ t('web.sheet.simulated_panel') }}</div>
+    {% endif %}
+    {% if s.model_revision %}<p class="small muted">{{ t('web.sheet.model', model=s.model_revision, prompt=s.prompt_version) }}</p>{% endif %}
+  </section>
+
+  <section aria-labelledby="val-h">
+    <h2 id="val-h" style="margin-top:0">{{ t('web.sheet.values') }}</h2>
+    <div class="table-scroll">
+    <table>
+      <thead><tr><th scope="col">{{ t('web.sheet.field') }}</th><th scope="col" class="num">{{ t('web.sheet.value') }}</th>
+        <th scope="col" class="num">{{ t('web.sheet.confidence') }}</th></tr></thead>
+      <tbody>
+      {% for f in s.fields %}
+        <tr class="{% if f.low_confidence or f.unclear %}low{% elif f.source == 'human_review' %}changed{% endif %}">
+          <th scope="row">{{ f.label }}
+            {% if f.low_confidence %}<span class="flag">· {{ t('web.sheet.low') }}</span>{% endif %}
+            {% if f.unclear %}<span class="flag">· {{ t('web.sheet.unclear') }}</span>{% endif %}
+            {% if f.source == 'human_review' %}<span class="small muted">· {{ t('web.sheet.by_reviewer', old=f.model_value if f.model_value is not none else t('web.sheet.blank')) }}</span>{% endif %}
+          </th>
+          <td class="num">{% if f.value is none %}<span class="muted">{{ t('web.sheet.blank') }}</span>{% else %}{{ f.value }}{% endif %}</td>
+          <td class="num">{% if f.confidence is not none and f.source == 'model' %}{{ '%.0f' % (f.confidence * 100) }}%{% else %}–{% endif %}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    </div>
+  </section>
+</div>
+
+<h2>{{ t('web.sheet.rules') }}</h2>
+{% set failed = s.rules | rejectattr('passed') | list %}
+{% if not failed %}<p class="success">{{ t('web.sheet.rules_ok') }}</p>{% endif %}
+{% for r in failed %}
+  <div class="rule {% if r.severity == 'soft' %}soft{% endif %}">{% if r.severity == 'soft' %}<strong>{{ t('web.sheet.soft') }}:</strong> {% endif %}{{ r.message }}</div>
+{% endfor %}
+
+{% set dec = s.detail.get('decoding') %}
+{% if dec and s.status not in ['REVIEWED', 'VERIFIED'] %}
+  {% if dec.outcome == 'REPAIRED_SUGGESTION' %}
+  <div class="suggestion">
+    <h3 style="margin-top:0">{{ t('web.sheet.suggestion_title') }}</h3>
+    <p class="small">{{ t('web.sheet.suggestion_text') }}</p>
+    <ul>{% for f in s.fields if f.has_suggestion %}<li><strong>{{ f.label }}</strong>: {{ f.value if f.value is not none else t('web.sheet.blank') }} → {{ f.suggestion if f.suggestion is not none else t('web.sheet.blank') }}</li>{% endfor %}</ul>
+  </div>
+  {% elif dec.outcome == 'AMBIGUOUS' %}<p class="notice">{{ t('web.sheet.ambiguous') }}</p>
+  {% elif dec.outcome == 'NO_CONSISTENT_READING' %}<p class="rule">{{ t('web.sheet.inconsistent') }}</p>{% endif %}
+{% endif %}
+
+<h2>{{ t('web.sheet.verifications') }}</h2>
+<p>{{ t('web.sheet.counts', confirm=s.verification_counts.get('confirm', {}).get('count', 0), dispute=s.verification_counts.get('dispute', {}).get('count', 0)) }}</p>
+{% if can_verify == 'yes' %}
+<form method="post" action="/sheet/{{ s.id }}/verify" class="card">
+  <fieldset>
+    <legend><strong>{{ t('web.verify.title') }}</strong></legend>
+    <p class="small muted">{{ t('web.verify.help') }}</p>
+    <label><input type="radio" name="verdict" value="confirm" required> {{ t('web.verify.confirm') }}</label><br>
+    <label><input type="radio" name="verdict" value="dispute"> {{ t('web.verify.dispute') }}</label>
+    <p><label for="cf">{{ t('web.verify.correction') }}</label><br>
+      <select id="cf" name="correction_field"><option value="">{{ t('web.verify.none') }}</option>
+        {% for f in s.fields %}<option value="{{ f.name }}">{{ f.label }}</option>{% endfor %}</select>
+      <label for="cv" class="small">{{ t('web.verify.correction_value') }}</label>
+      <input id="cv" name="correction_value" type="number" min="0" max="9999" inputmode="numeric" style="width:8em"></p>
+    <p><label for="cm">{{ t('web.verify.comment') }}</label><br><textarea id="cm" name="comment" rows="2" cols="40" maxlength="500"></textarea></p>
+    <button type="submit">{{ t('web.verify.title') | replace('?', '') }} →</button>
+  </fieldset>
+</form>
+{% elif can_verify == 'sign_in' %}<p class="muted">{{ t('web.verify.sign_in') }} <a href="/login?next=/sheet/{{ s.id }}">{{ t('web.nav.login') }}</a></p>
+{% elif can_verify == 'other_unit' %}<p class="muted">{{ t('web.verify.other_unit') }}</p>
+{% elif can_verify == 'not_ready' %}<p class="muted">{{ t('web.verify.not_ready') }}</p>{% endif %}
+
+<h2>{{ t('web.sheet.journey') }}</h2>
+<ol class="journey">
+  {% for step in s.journey %}<li>{{ step.step }}{% if step.ts %} <span class="small muted">({{ step.ts[:16] | replace('T', ' ') }} UTC)</span>{% endif %}</li>{% endfor %}
+</ol>
+{% endblock %}

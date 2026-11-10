@@ -23,3 +23,6 @@ __pycache__/
 
 # Uploaded sheet images (may include redacted real sheets)
 data/uploads/
+
+# local screenshots
+shots/

@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}{{ t('web.disc.title') }}{% endblock %}
+{% block content %}
+<h1>{{ t('web.disc.title') }}</h1>
+<p class="lede">{{ t('web.disc.intro') }}</p>
+<form class="controls" method="get" action="/discrepancies">
+  <div><label for="type">{{ t('web.disc.type') }}</label>
+    <select id="type" name="type"><option value="">{{ t('web.disc.all') }}</option>
+      {% for ty in types %}<option value="{{ ty }}" {% if ty == dtype %}selected{% endif %}>{{ ty }}</option>{% endfor %}</select></div>
+  <div><label for="status">{{ t('web.disc.status') }}</label>
+    <select id="status" name="status"><option value="">{{ t('web.disc.all') }}</option>
+      {% for st in ['open', 'resolved', 'dismissed'] %}<option value="{{ st }}" {% if st == status %}selected{% endif %}>{{ st }}</option>{% endfor %}</select></div>
+  <button type="submit">{{ t('web.apply') }}</button>
+  <a class="button secondary" href="/export/discrepancies.csv?{{ query }}">{{ t('web.disc.export_csv') }}</a>
+  <a class="button secondary" href="/export/discrepancies.json?{{ query }}">{{ t('web.disc.export_json') }}</a>
+</form>
+<p class="small muted">{{ t('web.disc.export_note') }}</p>
+{% if not rows %}<p>{{ t('web.disc.none') }}</p>{% else %}
+<div class="table-scroll">
+<table>
+  <thead><tr><th scope="col">#</th><th scope="col">{{ t('web.disc.type') }}</th><th scope="col">{{ t('web.disc.status') }}</th>
+    <th scope="col">{{ t('web.sheet.title', id='') }}</th><th scope="col">{{ t('web.table.data') }}</th><th scope="col">{{ t('web.disc.evidence') }}</th></tr></thead>
+  <tbody>
+  {% for r in rows %}
+    <tr><td>{{ r.discrepancy_id }}</td><td>{{ r.type }}</td>
+      <td><span class="pill {{ 'bad' if r.status == 'open' else 'ok' }}">{{ r.status }}</span></td>
+      <td><a href="/sheet/{{ r.sheet_id }}">{{ r.sheet_id }}</a> · {{ r.unit }}</td>
+      <td class="small">{{ t('web.source.real') if r.source == 'real_redacted' else t('web.source.sim') }}</td>
+      <td class="small">{{ r.evidence }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endif %}
+{% endblock %}

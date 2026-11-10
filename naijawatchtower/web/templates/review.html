@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% from "_macros.html" import status_pill %}
+{% block title %}{{ t('web.review.title') }}{% endblock %}
+{% block content %}
+<h1>{{ t('web.review.title') }}</h1>
+<p class="lede">{{ t('web.review.intro') }}</p>
+{% if flash %}<p class="success" role="status">{{ flash }}</p>{% endif %}
+{% if not queue %}<p>{{ t('web.review.empty') }}</p>{% else %}
+<div class="table-scroll">
+<table id="queue">
+  <thead><tr><th scope="col" class="num">{{ t('web.review.risk') }}</th><th scope="col">{{ t('web.sheet.title', id='') }}</th>
+    <th scope="col">{{ t('web.table.status') }}</th><th scope="col">{{ t('web.review.reasons') }}</th><th scope="col"></th></tr></thead>
+  <tbody>
+  {% for q in queue %}
+    <tr><td class="num">{{ q.risk }}</td><td>{{ q.sheet_id }} · {{ q.unit }} <span class="small muted">({{ t('web.source.real') if q.source == 'real_redacted' else t('web.source.sim') }})</span></td>
+      <td>{{ status_pill(q.status, t) }}</td><td class="small">{{ q.reasons | join('; ') }}{% if q.pending_corrections %}; corrections pending{% endif %}</td>
+      <td><a class="button secondary review-link" href="/review/{{ q.sheet_id }}">{{ t('web.review.open') }}</a></td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endif %}
+{% endblock %}
+{% block scripts %}
+<script>
+(function () {
+  const links = Array.from(document.querySelectorAll(".review-link")); let i = -1;
+  document.addEventListener("keydown", e => {
+    if (e.target.matches("input, textarea, select") || !links.length) return;
+    if (e.key === "j") { i = Math.min(links.length - 1, i + 1); links[i].focus(); }
+    if (e.key === "k") { i = Math.max(0, i - 1); links[i].focus(); }
+  });
+})();
+</script>
+{% endblock %}

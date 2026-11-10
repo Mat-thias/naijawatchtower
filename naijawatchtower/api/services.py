@@ -327,8 +327,10 @@ def _units_in_scope(db: Session, scope: str, code: str | None) -> list[PollingUn
     elif scope == "ward":
         st, lga, ra = (code or "").split("-")
         q = q.where(PollingUnit.state_code == st, PollingUnit.lga_code == lga, PollingUnit.ra_code == ra)
+    elif scope == "zone":
+        q = q.where(PollingUnit.zone == code)
     elif scope != "national":
-        raise ServiceError(422, "scope", "scope must be national, state, lga or ward")
+        raise ServiceError(422, "scope", "scope must be national, zone, state, lga or ward")
     return list(db.execute(q.order_by(PollingUnit.code)).scalars())
 
 

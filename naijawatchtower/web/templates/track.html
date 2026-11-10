@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}{{ t('web.track.title') }}{% endblock %}
+{% block content %}
+<h1>{{ t('web.track.title') }}</h1>
+<form class="controls" method="get" action="/track">
+  <div><label for="ref">{{ t('web.track.ref') }}</label><input id="ref" name="ref" type="text" inputmode="numeric" value="{{ ref or '' }}" required></div>
+  <button type="submit">{{ t('web.track.go') }}</button>
+</form>
+{% if ref %}
+  {% if case %}<p class="card" role="status">{{ t('web.track.result', ref=case.ref, status=t('ussd.case.' ~ case.status), when=case.updated_at[:16] | replace('T', ' ')) }}{% if case.reason %}<br>{{ case.reason }}{% endif %}</p>
+  {% else %}<p class="notice" role="status">{{ t('web.track.unknown') }}</p>{% endif %}
+{% endif %}
+{% endblock %}

@@ -65,6 +65,17 @@ Every decision taken without explicit instruction, with its reason. Matthias can
 | D31 | The sheet page checks the rules live against the current values (model reading or reviewer values); `validation_result` keeps the pipeline's original check. | After a review, the page must show whether the corrected figures add up. |
 | D32 | Every verification (including a confirmation) gets a random 5-digit case reference, stored on the verification row. | USSD shows a reference after both "yes" and "no", and a repeat attempt can quote it. |
 
+## M3 web decisions
+
+| id | decision | reason |
+|---|---|---|
+| D33 | HTMX **2.0.11** (licence **0BSD**) is vendored as `naijawatchtower/web/static/htmx-2.0.11.min.js`, downloaded once from unpkg on 10 Nov 2026 (sha256 `d6fdc75f204e6bdefa99b69bf1e6d4ac69b8a364f77929f45c13476b4000f717`). No CDN at runtime. | Spec: vendored HTMX, no CDN, no build step. |
+| D34 | `/pu/{code}` and `/discrepancies` serve HTML to browsers (`Accept: text/html`) and JSON to everything else. | The spec names the same paths for the JSON API (5.3) and the pages (9). |
+| D35 | Demo quick sign-in (`/login/demo/{role}`) for seeded demo accounts, enabled while `NWT_DEMO_MODE=1` (the default). **Turn it off for anything but a demo.** | The 3-minute demo video cannot wait for OTPs from a server log. |
+| D36 | On the coverage layer a state with units but no sheets shows **0%** (that is data: nothing digitised). The "no data" hatch marks states with no units (coverage) or nothing digitised (verified, accreditation). | Showing 0% as "no data" would hide states that are behind. |
+| D37 | An `/upload` page for the ingest role (not in the spec's page list) posts to the same ingest path as `POST /sheets`. | Needed for `make demo-live`, where a redacted copy is read on the GPU on camera. |
+| D38 | Web forms rely on `SameSite=Lax` session cookies; there are no CSRF tokens in the PoC. | Proportionate for a local demo; recorded as a residual risk in THREAT_MODEL. |
+
 ## M1 smoke results (10 Nov 2026; engineering checks, not reported metrics)
 
 - Both candidates load in 4-bit and produce schema-valid output on 3/3 real sheets: Qwen3.5-9B 10.5–12 s/sheet, peak 8.2 GB; Qwen3-VL-8B-Instruct 8.6–9.3 s/sheet, peak 6.8 GB (1.6 MP image budget, zero-shot, ~1,950–1,970 input tokens).

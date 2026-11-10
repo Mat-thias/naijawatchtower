@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}{{ t('web.login.title') }}{% endblock %}
+{% block content %}
+<h1>{{ t('web.login.title') }}</h1>
+<p class="notice">{{ t('web.login.demo') }}</p>
+{% if error %}<p class="rule" role="alert">{{ error }}</p>{% endif %}
+{% if sent %}<p class="success" role="status">{{ t('web.login.sent') }}</p>{% endif %}
+<div class="grid-2">
+  <section class="card">
+    {% if not sent %}
+    <form method="post" action="/login/request">
+      <input type="hidden" name="next" value="{{ next }}">
+      <p><label for="phone">{{ t('web.login.phone') }}</label><br><input id="phone" name="phone" type="tel" required autocomplete="tel"></p>
+      <button type="submit">{{ t('web.login.send') }}</button>
+    </form>
+    {% else %}
+    <form method="post" action="/login/verify">
+      <input type="hidden" name="next" value="{{ next }}"><input type="hidden" name="phone" value="{{ phone }}">
+      <p><label for="otp">{{ t('web.login.code') }}</label><br><input id="otp" name="otp" type="text" inputmode="numeric" required autocomplete="one-time-code"></p>
+      <p><label for="pu">{{ t('web.login.unit') }}</label><br><input id="pu" name="pu_code" type="text" inputmode="numeric"></p>
+      <p><label for="inv">{{ t('web.login.invite') }}</label><br><input id="inv" name="invite_code" type="text"></p>
+      <p><label><input type="checkbox" name="opt_in_sms" value="1"> {{ t('web.login.sms') }}</label></p>
+      <button type="submit">{{ t('web.login.verify') }}</button>
+    </form>
+    {% endif %}
+  </section>
+  {% if demo_accounts %}
+  <section class="card">
+    <h2 style="margin-top:0">{{ t('web.login.quick') }}</h2>
+    <p class="small muted">{{ t('web.login.quick_help') }}</p>
+    <ul>{% for role, info in demo_accounts.items() %}
+      <li><a href="/login/demo/{{ role }}?next={{ next }}">{{ role }}</a>{% if info %} <span class="small muted">({{ info }})</span>{% endif %}</li>{% endfor %}</ul>
+  </section>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="{{ 'en' if lang == 'en' else lang }}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}{{ t('web.brand') }}{% endblock %} · NaijaWatchTower</title>
+<link rel="stylesheet" href="/static/style.css">
+<script src="/static/htmx-2.0.11.min.js" defer></script>
+{% block head %}{% endblock %}
+</head>
+<body>
+<a class="skip" href="#content">{{ t('web.skip') }}</a>
+<div class="banners">
+  <div class="banner unofficial" role="note">{{ t('web.banner.unofficial') }}</div>
+  <div class="banner demo" role="note">{{ t('web.banner.demo') }}</div>
+</div>
+<header class="site">
+  <div class="site-inner">
+    <a class="brand" href="/">{{ t('web.brand') }}</a>
+    <nav class="main" aria-label="Main">
+      {% for href, key, roles in nav %}
+        {% if not roles or (user and user.role in roles) %}
+        <a href="{{ href }}" {% if active == href %}aria-current="page"{% endif %}>{{ t(key) }}</a>
+        {% endif %}
+      {% endfor %}
+    </nav>
+    <span class="who">
+      {{ t('web.nav.language') }}:
+      <a href="/lang/en" {% if lang == 'en' %}aria-current="true"{% endif %}>{{ t('web.lang.en') }}</a> ·
+      <a href="/lang/pcm" {% if lang == 'pcm' %}aria-current="true"{% endif %}>{{ t('web.lang.pcm') }}</a>
+      ·
+      {% if user %}{{ t('web.signed_in_as', role=user.role) }} · <a href="/logout">{{ t('web.nav.logout') }}</a>
+      {% else %}<a href="/login">{{ t('web.nav.login') }}</a>{% endif %}
+    </span>
+  </div>
+</header>
+<main id="content" tabindex="-1">
+{% block content %}{% endblock %}
+</main>
+<footer class="site">{{ t('web.footer') }}</footer>
+{% block scripts %}{% endblock %}
+</body>
+</html>

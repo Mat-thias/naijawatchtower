@@ -194,7 +194,9 @@ def create_app(settings: Settings | None = None, reader_factory: Callable[[], Sh
         return FileResponse(sheet.image_path, headers={"Cache-Control": "private, max-age=3600"})
 
     @app.get("/pu/{code}")
-    def get_unit(code: str, db: Session = Depends(get_db)):
+    def get_unit(code: str, request: Request, db: Session = Depends(get_db)):
+        if "text/html" in request.headers.get("accept", ""):
+            return app.state.web_unit_page(request, code, db)
         unit = services.unit_by_code(db, code)
         if unit is None:
             raise HTTPException(404, "Unknown polling-unit code.")
@@ -249,8 +251,11 @@ def create_app(settings: Settings | None = None, reader_factory: Callable[[], Sh
     # -------------------------------------------------------------- discrepancies, cases, audit
 
     @app.get("/discrepancies")
-    def discrepancies(status: str | None = None, type: str | None = None, db: Session = Depends(get_db)):
-        return {"discrepancies": services.discrepancy_rows(db, status, type), "demo": DEMO_BANNER}
+    def discrepancies(request: Request, status: str | None = None, type: str | None = None,
+                      db: Session = Depends(get_db)):
+        if "text/html" in request.headers.get("accept", ""):
+            return app.state.web_discrepancies_page(request, status, type, db)
+        return {"discrepancies": services.discrepancy_rows(db, status or None, type or None), "demo": DEMO_BANNER}
 
     @app.get("/export/discrepancies.json")
     def export_json(request: Request, status: str | None = None, type: str | None = None,
@@ -313,7 +318,7 @@ def create_app(settings: Settings | None = None, reader_factory: Callable[[], Sh
 
     @app.get("/ussd-sim")
     def ussd_sim(request: Request):
-        return templates.TemplateResponse(request, "ussd_sim.html", {"default_phone": "08051234567"})
+        return app.state.render(request, "ussd_sim.html", None, default_phone="08051234567")
 
     @app.post("/ussd-sim/send", response_class=PlainTextResponse)
     def ussd_sim_send(sessionId: str = Form(""), serviceCode: str = Form(""), phoneNumber: str = Form(...),
@@ -321,6 +326,16 @@ def create_app(settings: Settings | None = None, reader_factory: Callable[[], Sh
         """Server-side stand-in for a telecom aggregator: the secret never reaches the browser."""
         return ussd(sessionId, serviceCode, phoneNumber, text, ussd_secret(), db)
 
+    # -------------------------------------------------------------- web pages, static files, gzip
+
+    from fastapi.middleware.gzip import GZipMiddleware
+    from fastapi.staticfiles import StaticFiles
+
+    from naijawatchtower.web import routes as web_routes
+    app.mount("/static", StaticFiles(directory=str(Path(__file__).resolve().parent.parent / "web" / "static")),
+              name="static")
+    app.add_middleware(GZipMiddleware, minimum_size=1000)
+    web_routes.register(app)
     return app
 
 

@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}{{ t(prefix ~ '.title') }}{% endblock %}
+{% block content %}
+<h1>{{ t(prefix ~ '.title') }}</h1>
+{% for key in sections %}
+  <h2>{{ t(prefix ~ '.' ~ key ~ '_h') }}</h2>
+  <p style="max-width:70ch">{{ t(prefix ~ '.' ~ key) }}</p>
+{% endfor %}
+{% if caveat %}<p class="notice small">{{ t(caveat) }}</p>{% endif %}
+{% endblock %}

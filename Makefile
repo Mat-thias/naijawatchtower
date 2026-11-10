@@ -50,3 +50,13 @@ eval-models:      ## zero-shot model comparison on R-dev (needs labels + split)
 
 eval:             ## write results/metrics.json and results/REPORT.md from all runs
 	$(PY) scripts/evaluate.py report
+
+DEMO_DB := data/demo.db
+PORT ?= 8000
+
+demo:             ## seed the demo DB and serve it in cache mode (no GPU needed): http://127.0.0.1:8000
+	$(PY) scripts/seed_demo.py --db $(DEMO_DB)
+	NWT_DB=sqlite:///$(DEMO_DB) VLM_BACKEND=cache $(PY) -m uvicorn naijawatchtower.api.main:app --host 127.0.0.1 --port $(PORT)
+
+demo-live:        ## serve the demo with the VLM on the GPU; upload a redacted copy at /upload (ingest account)
+	NWT_DB=sqlite:///$(DEMO_DB) VLM_BACKEND=local $(GPU_ENV) $(PY) -m uvicorn naijawatchtower.api.main:app --host 127.0.0.1 --port $(PORT)

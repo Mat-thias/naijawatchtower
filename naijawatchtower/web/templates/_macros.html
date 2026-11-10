@@ -1,0 +1,49 @@
+{% macro status_pill(status, t) -%}
+  {%- set cls = {'VERIFIED': 'ok', 'REVIEWED': 'ok', 'DIGITISED_UNVERIFIED': 'neutral', 'PROCESSING': 'neutral',
+                 'NEEDS_REVIEW': 'warn', 'UNREADABLE': 'warn', 'DISPUTED': 'bad'}.get(status, 'neutral') -%}
+  <span class="pill {{ cls }}">{{ t('web.status.' ~ status) }}</span>
+{%- endmacro %}
+
+{% macro tiles(cov, t) -%}
+<div class="tiles">
+  {% for key in ['expected', 'digitised', 'needs_review', 'reviewed', 'verified', 'disputed'] %}
+  <div class="tile"><div class="num">{{ cov[key] }}</div><div class="lbl">{{ t('web.tile.' ~ key) }}</div></div>
+  {% endfor %}
+</div>
+{%- endmacro %}
+
+{% macro coverage_groups(agg, t) -%}
+  {% if agg.coverage.real_redacted.expected %}
+    <div class="group-label">{{ t('web.tiles.real') }}</div>{{ tiles(agg.coverage.real_redacted, t) }}
+  {% endif %}
+  {% if agg.coverage.simulated.expected %}
+    <div class="group-label">{{ t('web.tiles.sim') }}</div>{{ tiles(agg.coverage.simulated, t) }}
+  {% endif %}
+{%- endmacro %}
+
+{% macro party_totals(agg, t) -%}
+<h2>{{ t('web.totals.title') }}</h2>
+<p class="muted small">{{ t('web.totals.note') }}</p>
+{% if agg.all_digitised.sheets == 0 %}
+  <p>{{ t('web.totals.none') }}</p>
+{% else %}
+<div class="table-scroll">
+<table>
+  <caption class="muted small" style="text-align:left">
+    {% for v in ['verified_only', 'verified_plus_reviewed', 'all_digitised'] %}
+      <strong>{{ t('web.totals.' ~ v) }}</strong>: {{ t('web.totals.' ~ v ~ '_help') }}
+      ({{ t('web.totals.sheets', n=agg[v].sheets) }}){% if not loop.last %}<br>{% endif %}
+    {% endfor %}
+  </caption>
+  <thead><tr><th scope="col">{{ t('web.totals.party') }}</th>
+    {% for v in ['verified_only', 'verified_plus_reviewed', 'all_digitised'] %}<th scope="col" class="num">{{ t('web.totals.' ~ v) }}</th>{% endfor %}</tr></thead>
+  <tbody>
+  {% for party in agg.all_digitised.totals %}
+    <tr><th scope="row">{{ party }}</th>
+      {% for v in ['verified_only', 'verified_plus_reviewed', 'all_digitised'] %}<td class="num">{{ agg[v].totals[party] }}</td>{% endfor %}</tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endif %}
+{%- endmacro %}

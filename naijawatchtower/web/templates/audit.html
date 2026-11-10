@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}{{ t('web.audit.title') }}{% endblock %}
+{% block content %}
+<h1>{{ t('web.audit.title') }}</h1>
+<p class="lede">{{ t('web.audit.intro') }}</p>
+{% if chain.ok %}<p class="success" role="status">{{ t('web.audit.ok', n=chain.entries) }}</p>
+{% else %}<p class="rule" role="alert">{{ t('web.audit.broken', id=chain.first_broken_id) }}</p>{% endif %}
+<div class="table-scroll">
+<table>
+  <thead><tr><th scope="col">#</th><th scope="col">{{ t('web.audit.when') }}</th><th scope="col">{{ t('web.audit.who') }}</th>
+    <th scope="col">{{ t('web.audit.what') }}</th><th scope="col">{{ t('web.audit.hash') }}</th></tr></thead>
+  <tbody>
+  {% for e in entries %}
+    <tr><td>{{ e.id }}</td><td class="small">{{ e.ts[:19] | replace('T', ' ') }}</td><td>{{ e.actor_role }}</td>
+      <td>{{ e.action }}{% if e.sheet_id %} · <a href="/sheet/{{ e.sheet_id }}">{{ e.sheet_id }}</a>{% endif %}</td>
+      <td class="hash">{{ e.entry_hash[:16] }}…</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}
