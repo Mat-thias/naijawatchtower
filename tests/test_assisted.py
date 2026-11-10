@@ -88,3 +88,7 @@ def test_assisted_run_records_provenance(pattern_image, zero_sheet):
     assert prov["party_02"] == "model_corrected" and prov["registered_voters"] == "model_accepted"
     assert again.sheets["R001"]["label_mode"] == "assisted"
     assert provenance(None, labels)["party_02"] == "typed"
+    again.clear("R001")                                        # redo: the sheet comes back unlabelled
+    cleared = LabelStore.load(data_dir)
+    assert "R001" not in cleared.labels and cleared.sheet_id_for(pattern_image) == "R001"
+    assert cleared.unlabelled() == [pattern_image]

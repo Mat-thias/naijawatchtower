@@ -1,9 +1,9 @@
 """Human labelling of real sheets (CLAUDE.md 3.2).
 
-Two modes. Typed: Matthias types every value; `reconcile` later re-checks each
-disagreement with the reader. Assisted (default since 10 Nov, D41): the model pre-fills
-only the fields it is very confident about and Matthias types the rest; every label
-records its provenance so the evaluation can report typed and model-assisted fields apart.
+Default (D42): Matthias types every value; `reconcile` later shows each field the model
+read differently and asks him to re-check the image. Optional `--assist` mode pre-fills
+only fields the model is very confident about (tried on 10 Nov, not the default); every
+label records its provenance (typed / model_accepted / model_corrected).
 
 Label values: an int, None (blank cell) or ILLEGIBLE ("?").
 CSV encoding: digits, "" for blank, "?" for illegible.
@@ -207,6 +207,15 @@ class LabelStore:
                     if name in self.provenance[sheet_id]:
                         writer.writerow([sheet_id, name, self.provenance[sheet_id][name]])
         tmp.replace(self.provenance_csv)
+
+    def clear(self, sheet_id: str) -> None:
+        """Remove one sheet's labels, notes and provenance (its sheet id is kept) so it can be labelled again."""
+        self.labels.pop(sheet_id, None)
+        self.notes.pop(sheet_id, None)
+        self.provenance.pop(sheet_id, None)
+        if sheet_id in self.sheets:
+            self.sheets[sheet_id].update(labelled_at="", reconciled_at="", label_mode="")
+        self.save()
 
     def image_files(self) -> list[Path]:
         """All images in `images/`, sorted by name."""

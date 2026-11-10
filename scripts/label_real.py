@@ -1,14 +1,15 @@
-"""Label real sheets (CLAUDE.md 3.2), with model suggestions for the fields it is very sure of.
+"""Label real sheets by typing every value, then reconcile against the reader (CLAUDE.md 3.2).
 
 Usage:
-  python scripts/prefill_labels.py             # once: the model reads every sheet (GPU)
   python scripts/label_real.py                 # label every unlabelled image (resumable)
-  python scripts/label_real.py --typed         # no suggestions: type every value
-  python scripts/label_real.py reconcile       # re-check typed labels where the reader disagrees
+  python scripts/label_real.py reconcile       # re-check each label the model read differently
+  python scripts/label_real.py redo --sheet R003   # clear one sheet's labels so it is typed again
   python scripts/label_real.py status          # counts only
+  python scripts/label_real.py --assist        # optional: pre-fill confident model values (not the default)
 
-Answering a suggested line: Enter accepts; type the `_` values in order; n=value corrects field n.
-Typing format: items 1-8 on one line ('-' blank, '?' illegible); party rows as row=value; bottom total.
+Typing: items 1-8 on one line ('-' blank, '?' illegible, '5+74' or '5+74=79' for a written sum);
+party rows as row=value, with *0 if every other row has 0 written; then the bottom total.
+Reconcile compares with the stored model readings in data_real/runs/prefill/ (no GPU needed).
 """
 
 from __future__ import annotations
@@ -25,6 +26,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from naijawatchtower.config import DATA_REAL  # noqa: E402
 from naijawatchtower.eval.labelling import LabelStore, run_labelling, run_reconcile  # noqa: E402
 
+PREFILL = "runs/prefill"
+
 
 def open_in_viewer(image: Path) -> None:
     """Show the image without blocking the terminal.
@@ -38,10 +41,10 @@ def open_in_viewer(image: Path) -> None:
 
 
 def make_suggester(data_dir: Path, min_conf: float | None):
-    """Suggestions from the pre-read model outputs in data_real/runs/prefill/ (scripts/prefill_labels.py)."""
+    """Optional (--assist): confident model values from the stored readings in data_real/runs/prefill/."""
     from naijawatchtower.eval.assisted import PREFILL_MIN_CONF, Suggestion
     from naijawatchtower.ocr.cache_reader import CacheReader
-    cache = CacheReader([data_dir / "runs" / "prefill"])
+    cache = CacheReader([data_dir / PREFILL])
 
     def suggest(image: Path):
         if cache.path_for(image) is None:
@@ -50,17 +53,26 @@ def make_suggester(data_dir: Path, min_conf: float | None):
     return suggest
 
 
+def reconcile_reader(data_dir: Path, name: str | None):
+    """The stored model readings if present (no GPU), else a live or cache reader."""
+    from naijawatchtower.ocr.cache_reader import CacheReader
+    from naijawatchtower.ocr.factory import make_reader
+    if name is None and (data_dir / PREFILL).exists():
+        return CacheReader([data_dir / PREFILL])
+    return make_reader(name or "local")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("command", nargs="?", default="label", choices=["label", "reconcile", "status"])
+    parser.add_argument("command", nargs="?", default="label", choices=["label", "reconcile", "redo", "status"])
     parser.add_argument("--data-dir", type=Path, default=DATA_REAL)
     parser.add_argument("--limit", type=int, default=None)
     parser.add_argument("--no-viewer", action="store_true", help="do not open images")
-    parser.add_argument("--reader", default=os.environ.get("VLM_BACKEND", "local"),
-                        help="reader for reconcile: local (GPU) or cache")
-    parser.add_argument("--typed", action="store_true", help="no model suggestions: type every value")
-    parser.add_argument("--min-conf", type=float, default=None,
-                        help="pre-fill only fields at or above this model confidence (default 0.95)")
+    parser.add_argument("--reader", default=None,
+                        help="reconcile against: default the stored readings; 'local' (GPU) or 'cache'")
+    parser.add_argument("--sheet", help="sheet id for redo, e.g. R003")
+    parser.add_argument("--assist", action="store_true", help="pre-fill confident model values (not the default)")
+    parser.add_argument("--min-conf", type=float, default=None, help="with --assist: confidence needed to pre-fill")
     args = parser.parse_args()
 
     store = LabelStore.load(args.data_dir)
@@ -70,14 +82,20 @@ def main() -> int:
         print(f"images: {len(store.image_files())}  labelled: {len(store.labels)}  "
               f"reconciled: {reconciled}  unlabelled: {len(store.unlabelled())}")
         return 0
+    if args.command == "redo":
+        if not args.sheet or args.sheet not in store.labels:
+            print(f"no labels for sheet {args.sheet!r}; labelled: {', '.join(sorted(store.labels)) or 'none'}")
+            return 1
+        store.clear(args.sheet)
+        print(f"Cleared the labels of {args.sheet}; run `make label` to type it again.")
+        return 0
     try:
         if args.command == "label":
             n = run_labelling(store, input, print, show, args.limit,
-                              suggest=None if args.typed else make_suggester(args.data_dir, args.min_conf))
+                              suggest=make_suggester(args.data_dir, args.min_conf) if args.assist else None)
             print(f"\nLabelled {n} sheet(s). Saved to {store.labels_csv}")
         else:
-            from naijawatchtower.ocr.factory import make_reader
-            changed = run_reconcile(store, make_reader(args.reader), input, print, show)
+            changed = run_reconcile(store, reconcile_reader(args.data_dir, args.reader), input, print, show)
             print(f"\nReconciled. {changed} label(s) changed after re-checking.")
     except (KeyboardInterrupt, EOFError):
         print("\nStopped. Everything saved so far is kept; run again to resume.")
