@@ -65,6 +65,13 @@ Every decision taken without explicit instruction, with its reason. Matthias can
 | D31 | The sheet page checks the rules live against the current values (model reading or reviewer values); `validation_result` keeps the pipeline's original check. | After a review, the page must show whether the corrected figures add up. |
 | D32 | Every verification (including a confirmation) gets a random 5-digit case reference, stored on the verification row. | USSD shows a reference after both "yes" and "no", and a repeat attempt can quote it. |
 
+## Labelling conventions
+
+| id | decision | reason |
+|---|---|---|
+| D40 | A cell holding a **written sum** (e.g. item 8 written as "5+74") is labelled with its **total** (79); the label tool accepts `5+74` as typed and records a private note in `data_real/label_notes.csv`. The prompt tells the model to give the total. Such cells are counted and reported separately in the evaluation. Prompt `read_sheet_v1` was edited for this on 10 Nov before any reported run. | The output can hold only one number per field, and the total is what the clerk recorded; seen on a real sheet. |
+| D39 | Label **what is written**, not what should add up. A cell with "0", "NIL" or a dash is **0**; a truly empty cell is **blank** (`-`); a crossed-out value takes the **final rewritten** value; anything you cannot read is `?` (excluded from accuracy). | Keeps labels consistent with the prompt and the rules; arithmetic errors on the sheet must stay visible. |
+
 ## M3 web decisions
 
 | id | decision | reason |

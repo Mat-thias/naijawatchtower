@@ -16,7 +16,8 @@ def test_parse_value():
     assert parse_value("") is None and parse_value("-") is None
     assert parse_value("?") == ILLEGIBLE
     assert parse_value("0412") == 412
-    for bad in ["12a", "10000", "-3"]:
+    assert parse_value("5+74") == 79 and parse_value("1+2+3") == 6        # sum written in the cell
+    for bad in ["12a", "10000", "-3", "5+", "+5", "5++7", "9000+1000"]:
         with pytest.raises(ValueError):
             parse_value(bad)
 
@@ -51,7 +52,7 @@ def test_label_then_reconcile_end_to_end(pattern_image):
     store = LabelStore.load(data_dir)
     answers = ["24",                                   # state: Lagos
                "600 412 700 270 18 12 4OO 430",        # typo with letter O: rejected
-               "600 412 700 270 18 12 400 430",
+               "600 412 700 270 18 12 400 18+12+400",  # item 8 written as a sum
                "2=210 7=150 14=40", "400", "y"]
     out = []
     assert run_labelling(store, scripted(answers), out.append) == 1
@@ -60,6 +61,8 @@ def test_label_then_reconcile_end_to_end(pattern_image):
     reloaded = LabelStore.load(data_dir)
     assert reloaded.sheets["R001"]["state_code"] == "024"
     assert reloaded.labels["R001"]["party_07"] == 150
+    assert reloaded.labels["R001"]["total_used_ballots"] == 430
+    assert reloaded.notes["R001"] == {"total_used_ballots": "written as 18+12+400"}
     assert reloaded.unlabelled() == []
 
     # The reader disagrees on two fields: the human keeps one and corrects the other.

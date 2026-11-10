@@ -32,18 +32,46 @@ SHEETS_HEADER = ["sheet_id", "file", "sha256", "state_code", "labelled_at", "rec
 
 
 def parse_value(token: str) -> Label:
-    """Parse one typed value: digits, '-' or '' for blank, '?' for illegible."""
+    """Parse one typed value: digits, '-' or '' for blank, '?' for illegible.
+
+    A sum written in the cell (e.g. '5+74') is labelled with its total (79); see `is_expression`.
+    """
     token = token.strip()
     if token in ("", "-"):
         return None
     if token == ILLEGIBLE:
         return ILLEGIBLE
-    if not token.isdigit():
+    if is_expression(token):
+        value = sum(int(part) for part in token.split("+"))
+    elif not token.isdigit():
         raise ValueError(f"not a number: {token!r}")
-    value = int(token)
+    else:
+        value = int(token)
     if value > max_value():
         raise ValueError(f"{value} is above {max_value()}")
     return value
+
+
+def is_expression(token: str) -> bool:
+    """True for a sum written in a cell, such as '5+74'."""
+    parts = token.strip().split("+")
+    return len(parts) > 1 and all(p.isdigit() for p in parts)
+
+
+def expression_notes(items_line: str, party_line: str, bottom: str) -> dict[str, str]:
+    """Fields whose cell held a written sum, with what was typed (kept privately with the labels)."""
+    notes: dict[str, str] = {}
+    for name, tok in zip(item_fields(), items_line.split()):
+        if is_expression(tok):
+            notes[name] = f"written as {tok}"
+    for pair in party_line.split():
+        if "=" in pair:
+            row, value = pair.split("=", 1)
+            if is_expression(value) and row.isdigit() and 1 <= int(row) <= len(party_fields()):
+                notes[party_fields()[int(row) - 1]] = f"written as {value}"
+    if is_expression(bottom):
+        notes[bottom_total_field()] = f"written as {bottom.strip()}"
+    return notes
 
 
 def parse_items(line: str) -> dict[str, Label]:
@@ -92,6 +120,11 @@ class LabelStore:
     data_dir: Path
     sheets: dict[str, dict[str, str]] = field(default_factory=dict)
     labels: dict[str, dict[str, Label]] = field(default_factory=dict)
+    notes: dict[str, dict[str, str]] = field(default_factory=dict)    # e.g. a sum written in a cell
+
+    @property
+    def notes_csv(self) -> Path:
+        return self.data_dir / "label_notes.csv"
 
     @property
     def images_dir(self) -> Path:
@@ -116,6 +149,10 @@ class LabelStore:
             with store.labels_csv.open(newline="") as f:
                 for row in csv.DictReader(f):
                     store.labels.setdefault(row["sheet_id"], {})[row["field"]] = decode(row["value"])
+        if store.notes_csv.exists():
+            with store.notes_csv.open(newline="") as f:
+                for row in csv.DictReader(f):
+                    store.notes.setdefault(row["sheet_id"], {})[row["field"]] = row["note"]
         return store
 
     def save(self) -> None:
@@ -136,6 +173,14 @@ class LabelStore:
                 for name in field_names():
                     writer.writerow([sheet_id, name, encode(self.labels[sheet_id].get(name))])
         tmp.replace(self.labels_csv)
+        tmp = self.notes_csv.with_suffix(".tmp")
+        with tmp.open("w", newline="") as f:
+            writer = csv.writer(f)
+            writer.writerow(["sheet_id", "field", "note"])
+            for sheet_id in sorted(self.notes):
+                for name, note in sorted(self.notes[sheet_id].items()):
+                    writer.writerow([sheet_id, name, note])
+        tmp.replace(self.notes_csv)
 
     def image_files(self) -> list[Path]:
         """All images in `images/`, sorted by name."""
@@ -200,23 +245,35 @@ def format_labels(labels: dict[str, Label]) -> str:
     return f"  items 1-8: {items}\n  party rows: {parties}\n  bottom total: {bottom}"
 
 
-def label_sheet(ask: Ask, say: Say) -> tuple[int, dict[str, Label]]:
-    """Collect the state number and all 27 labels for one sheet from typed input."""
+def label_sheet(ask: Ask, say: Say) -> tuple[int, dict[str, Label], dict[str, str]]:
+    """Collect the state number, all 27 labels and any notes (e.g. sums written in a cell) for one sheet."""
+    raw: dict[str, str] = {}
+
+    def recording(key: str) -> Ask:
+        def inner(prompt: str) -> str:
+            raw[key] = ask(prompt)
+            return raw[key]
+        return inner
+
     while True:
         state = _ask_until_valid(ask, say, "State (name or number, e.g. 'Lagos' or '24'): ", _parse_state)
         say(f"  -> {state_by_number(state)['name']}")  # type: ignore[arg-type]
         labels: dict[str, Label] = {}
         labels.update(_ask_until_valid(  # type: ignore[arg-type]
-            ask, say, "Items 1-8, space-separated ('-' blank, '?' illegible): ", parse_items))
+            recording("items"), say,
+            "Items 1-8, space-separated ('-' blank, '?' illegible, a written sum like 5+74 is fine): ", parse_items))
         labels.update(_ask_until_valid(  # type: ignore[arg-type]
-            ask, say, "Party rows as row=value (e.g. '2=120 14=37'); add *0 if every other row has 0 written; "
-                      "Enter if all blank: ",
-            parse_party_rows))
+            recording("parties"), say,
+            "Party rows as row=value (e.g. '2=120 14=37'); add *0 if every other row has 0 written; "
+            "Enter if all blank: ", parse_party_rows))
         labels[bottom_total_field()] = _ask_until_valid(  # type: ignore[assignment]
-            ask, say, "Bottom 'TOTAL VALID VOTES' row (Enter or '-' if blank): ", parse_value)
+            recording("bottom"), say, "Bottom 'TOTAL VALID VOTES' row (Enter or '-' if blank): ", parse_value)
+        notes = expression_notes(raw.get("items", ""), raw.get("parties", ""), raw.get("bottom", ""))
         say(format_labels(labels))
+        for name, note in notes.items():
+            say(f"  note: {name} {note} -> labelled as {encode(labels[name])}")
         if ask("Save? [y = save, r = redo this sheet]: ").strip().lower() in ("y", "yes", ""):
-            return state, labels  # type: ignore[return-value]
+            return state, labels, notes  # type: ignore[return-value]
 
 
 def run_labelling(store: LabelStore, ask: Ask, say: Say,
@@ -230,12 +287,13 @@ def run_labelling(store: LabelStore, ask: Ask, say: Say,
         say(f"\n=== {sheet_id}: {image.name} ===")
         if show_image:
             show_image(image)
-        state, labels = label_sheet(ask, say)
+        state, labels, notes = label_sheet(ask, say)
         store.sheets[sheet_id] = {"sheet_id": sheet_id, "file": image.name,
                                   "sha256": sha256_file(image), "state_code": f"{state:03d}",
                                   "labelled_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
                                   "reconciled_at": ""}
         store.labels[sheet_id] = labels
+        store.notes[sheet_id] = notes
         store.save()
         done += 1
     return done
