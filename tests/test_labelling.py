@@ -21,6 +21,16 @@ def test_parse_value():
             parse_value(bad)
 
 
+def test_parse_state_by_name_or_number():
+    from naijawatchtower.eval.labelling import _parse_state
+    assert _parse_state("24") == 24 and _parse_state("Lagos") == 24 and _parse_state("taraba") == 34
+    assert _parse_state("cross") == 9 and _parse_state("FCT") == 37 and _parse_state("Abuja") == 37
+    assert _parse_state("Niger") == 26                     # exact match wins over prefix
+    for bad in ["38", "K", "Atlantis", ""]:                # 'K' is ambiguous (Kaduna, Kano, ...)
+        with pytest.raises(ValueError):
+            _parse_state(bad)
+
+
 def test_parse_items_and_rows():
     items = parse_items("600 412 700 270 18 12 400 430")
     assert items["accredited_voters"] == 412 and items["total_used_ballots"] == 430

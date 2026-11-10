@@ -168,14 +168,25 @@ def _ask_until_valid(ask: Ask, say: Say, prompt: str, parse: Callable[[str], obj
 
 
 def _parse_state(text: str) -> int:
-    if not text.strip().isdigit():
-        raise ValueError("type the state number (1-37)")
-    number = int(text)
-    try:
-        state_by_number(number)
-    except KeyError:
-        raise ValueError("state number must be 1-37") from None
-    return number
+    """State by INEC number (1-37) or by name ('Lagos', 'cross river', 'FCT', 'Abuja'; unique prefixes work)."""
+    from naijawatchtower.config import states
+    text = text.strip()
+    if text.isdigit():
+        number = int(text)
+        try:
+            state_by_number(number)
+        except KeyError:
+            raise ValueError("state number must be 1-37") from None
+        return number
+    key = text.lower()
+    if key in ("fct", "abuja"):
+        return 37
+    exact = [s for s in states() if s["name"].lower() == key]
+    matches = exact or [s for s in states() if s["name"].lower().startswith(key)] if key else []
+    if len(matches) != 1:
+        options = ", ".join(s["name"] for s in matches) if matches else "no state matches"
+        raise ValueError(f"type a state name or number 1-37 ({options})")
+    return matches[0]["number"]
 
 
 def format_labels(labels: dict[str, Label]) -> str:
@@ -190,7 +201,7 @@ def format_labels(labels: dict[str, Label]) -> str:
 def label_sheet(ask: Ask, say: Say) -> tuple[int, dict[str, Label]]:
     """Collect the state number and all 27 labels for one sheet from typed input."""
     while True:
-        state = _ask_until_valid(ask, say, "State number (1-37, see config/states.json): ", _parse_state)
+        state = _ask_until_valid(ask, say, "State (name or number, e.g. 'Lagos' or '24'): ", _parse_state)
         say(f"  -> {state_by_number(state)['name']}")  # type: ignore[arg-type]
         labels: dict[str, Label] = {}
         labels.update(_ask_until_valid(  # type: ignore[arg-type]

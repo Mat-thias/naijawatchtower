@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -25,9 +26,14 @@ from naijawatchtower.eval.labelling import LabelStore, run_labelling, run_reconc
 
 
 def open_in_viewer(image: Path) -> None:
-    """Open the image in the system viewer without blocking the terminal."""
-    subprocess.Popen(["xdg-open", str(image)], stdout=subprocess.DEVNULL,
-                     stderr=subprocess.DEVNULL, start_new_session=True)
+    """Show the image without blocking the terminal.
+
+    In a VS Code terminal (including Remote-SSH) the image opens as an editor tab on your own
+    screen; otherwise the desktop's default image viewer is used.
+    """
+    in_vscode = os.environ.get("TERM_PROGRAM") == "vscode" or os.environ.get("VSCODE_IPC_HOOK_CLI")
+    command = ["code", "--reuse-window", str(image)] if in_vscode and shutil.which("code") else ["xdg-open", str(image)]
+    subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
 
 
 def main() -> int:
