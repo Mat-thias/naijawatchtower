@@ -1,0 +1,27 @@
+# Verification, review and anti-abuse settings (CLAUDE.md 6, 8.2).
+weights:
+  citizen: 1
+  observer: 3
+verified_confirm_weight_min: 3      # VERIFIED: confirm weight >= this and dispute weight == 0
+disputed_weight_min: 2              # DISPUTED: dispute weight >= this, or any observer dispute
+rate_limits:
+  verifications_per_user_per_hour: 10
+  requests_per_ip_per_minute: 60
+burst:
+  window_minutes: 10
+  min_verifications: 5
+  account_age_hours: 1
+# Controlled reasons a reviewer must choose from. `public` is the one-line text shown on /case/{ref}.
+reason_codes:
+  reading_corrected:
+    public: "Reading corrected after checking the image."
+    case_status: resolved_reading_corrected
+  confirmed_as_written:
+    public: "Sheet confirmed as written."
+    case_status: resolved_no_change
+  not_matched:
+    public: "Report could not be matched to this sheet."
+    case_status: dismissed
+  sheet_inconsistent:
+    public: "Figures checked; the sheet itself does not add up and is flagged for follow-up."
+    case_status: resolved_no_change

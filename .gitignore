@@ -20,3 +20,6 @@ __pycache__/
 
 # Guard: downloads saved at the root by mistake
 /images/
+
+# Uploaded sheet images (may include redacted real sheets)
+data/uploads/

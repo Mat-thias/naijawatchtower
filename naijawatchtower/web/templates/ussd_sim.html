@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>USSD simulator</title>
+<style>
+  :root { --bg:#f4f5f2; --fg:#1b1d1a; --muted:#5b6058; --phone:#22252a; --screen:#c9d8b4; --screen-fg:#141a0e;
+          --key:#3a3f46; --key-fg:#f3f4f1; --accent:#1f6f5c; --warn:#b3261e; --banner:#fff4cc; --banner-fg:#4a3b00; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#16181a; --fg:#e8eae5; --muted:#a3a89f; --banner:#3d3412; --banner-fg:#f5e6a8; } }
+  * { box-sizing: border-box; }
+  body { margin:0; font:16px/1.45 system-ui, sans-serif; background:var(--bg); color:var(--fg); }
+  .banner { background:var(--banner); color:var(--banner-fg); padding:8px 16px; font-size:14px; text-align:center; }
+  main { max-width:960px; margin:0 auto; padding:16px; display:grid; gap:24px; grid-template-columns: minmax(0,320px) minmax(0,1fr); }
+  @media (max-width:720px) { main { grid-template-columns: minmax(0,1fr); } }
+  .phone { background:var(--phone); border-radius:28px; padding:22px 18px 26px; max-width:320px; }
+  .screen { background:var(--screen); color:var(--screen-fg); border-radius:8px; min-height:220px; padding:10px;
+            font:15px/1.35 ui-monospace, monospace; white-space:pre-wrap; word-break:break-word; }
+  .meta { display:flex; justify-content:space-between; font:12px ui-monospace, monospace; color:#d7dbd2; margin:8px 2px; }
+  .over { color:#ff8a80; font-weight:700; }
+  input { width:100%; font:18px ui-monospace, monospace; padding:8px; border-radius:6px; border:1px solid #888; margin:6px 0 10px; }
+  .keys { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+  button { font:600 17px system-ui, sans-serif; padding:11px 0; border-radius:10px; border:0; background:var(--key); color:var(--key-fg); cursor:pointer; }
+  button:focus-visible, input:focus-visible { outline:3px solid #ffd54f; outline-offset:2px; }
+  .row { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px; }
+  .dial { background:var(--accent); } .hang { background:var(--warn); }
+  .side h1 { font-size:22px; margin:0 0 8px; } .side p, .side li { color:var(--muted); }
+  code { background:rgba(127,127,127,.15); padding:1px 4px; border-radius:4px; }
+  label { font-size:13px; color:#d7dbd2; }
+</style>
+</head>
+<body>
+<div class="banner" role="note">[DEMO] Simulated USSD session. No telecom provider is connected and no SMS is sent. Results shown are UNOFFICIAL.</div>
+<main>
+  <section class="phone" aria-label="Simulated feature phone">
+    <label for="msisdn">Simulated phone number</label>
+    <input id="msisdn" value="{{ default_phone }}" inputmode="tel" autocomplete="off">
+    <div id="screen" class="screen" role="status" aria-live="polite">Press Dial to start *123#</div>
+    <div class="meta"><span id="kind">idle</span><span id="count">0 / 160</span></div>
+    <label for="entry">Your input</label>
+    <input id="entry" inputmode="numeric" autocomplete="off" aria-describedby="screen">
+    <div class="keys" aria-label="Keypad">
+      {% for k in ["1","2","3","4","5","6","7","8","9","*","0","#"] %}<button type="button" data-key="{{ k }}">{{ k }}</button>{% endfor %}
+    </div>
+    <div class="row">
+      <button type="button" class="dial" id="dial">Dial / Send</button>
+      <button type="button" class="hang" id="hang">End</button>
+    </div>
+  </section>
+  <section class="side">
+    <h1>USSD simulator</h1>
+    <p>This page plays the role of a telecom aggregator. Each press of <em>Dial / Send</em> posts the session so far to
+      <code>POST /ussd</code> (form fields <code>sessionId</code>, <code>serviceCode</code>, <code>phoneNumber</code>,
+      <code>text</code>), via a server-side proxy that adds the shared secret. The raw reply is shown exactly as a phone
+      would receive it, with a character counter that turns red above 160.</p>
+    <ul>
+      <li>Try <code>3</code> then a unit code to register, <code>1</code> to check your unit, <code>2</code> to verify.</li>
+      <li>The phone number is hashed on the server and never stored.</li>
+      <li>Real use needs a telecom aggregator, a shortcode and regulatory approval.</li>
+    </ul>
+    <p>Last request text: <code id="sent">(none)</code></p>
+  </section>
+</main>
+<script>
+(function () {
+  const screen = document.getElementById("screen"), entry = document.getElementById("entry"),
+        kind = document.getElementById("kind"), count = document.getElementById("count"),
+        sent = document.getElementById("sent"), phone = document.getElementById("msisdn");
+  let inputs = null, sessionId = "";
+  function show(raw) {
+    const k = raw.slice(0, 3), body = raw.slice(4);
+    screen.textContent = body; kind.textContent = k === "CON" ? "CON (continue)" : k === "END" ? "END (session over)" : raw;
+    count.textContent = body.length + " / 160"; count.className = body.length > 160 ? "over" : "";
+    if (k === "END") { inputs = null; }
+  }
+  async function send() {
+    if (inputs === null) { inputs = []; sessionId = "sim-" + Date.now(); }
+    else { inputs.push(entry.value.trim()); }
+    entry.value = "";
+    const text = inputs.join("*");
+    sent.textContent = text === "" ? '""' : text;
+    const body = new URLSearchParams({ sessionId, serviceCode: "*123#", phoneNumber: phone.value, text });
+    try {
+      const r = await fetch("/ussd-sim/send", { method: "POST", body });
+      show(await r.text());
+    } catch (e) { screen.textContent = "Network error: " + e; }
+    entry.focus();
+  }
+  document.querySelectorAll("[data-key]").forEach(b => b.addEventListener("click", () => { entry.value += b.dataset.key; entry.focus(); }));
+  document.getElementById("dial").addEventListener("click", send);
+  document.getElementById("hang").addEventListener("click", () => { inputs = null; screen.textContent = "Session ended."; kind.textContent = "idle"; });
+  entry.addEventListener("keydown", e => { if (e.key === "Enter") send(); });
+})();
+</script>
+</body>
+</html>

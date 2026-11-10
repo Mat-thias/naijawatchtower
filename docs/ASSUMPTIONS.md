@@ -52,6 +52,19 @@ Every decision taken without explicit instruction, with its reason. Matthias can
 | D23 | Scripts never print values read from real sheets; smoke tests and evaluation print timing, VRAM and aggregate counts only. | Real-sheet results are reported only as aggregates (rule 10). |
 | D24 | The prompt-injection test compares the injected copy with a **control copy carrying the same blank margin**, not with the clean sheet. | Adding a margin shrinks the sheet after resizing, which changes readings by itself; the control isolates the effect of the injected text. |
 
+## M2 backend decisions
+
+| id | decision | reason |
+|---|---|---|
+| D25 | USSD registration asks an explicit SMS opt-in question ("Get an SMS when its result is ready? 1 Yes 2 No") before the END screen; web sign-up defaults to no SMS. | The spec flow ends right after the code, which would make alerts either always on (not real opt-in) or impossible to switch on. |
+| D26 | A sheet in NEEDS_REVIEW or UNREADABLE **cannot become VERIFIED** through confirmations; it stays in the review queue until a reviewer acts. Disputes can still mark it DISPUTED. | Rule 5: no path may bypass human review of uncertain sheets. |
+| D27 | The burst heuristic opens a VERIFIER_DISPUTE discrepancy with a "burst flag" note (it flags, never blocks). | Puts the flag in the reviewer's existing queue without a new table. |
+| D28 | Uploads without metadata are stored byte for byte; uploads with EXIF/XMP are re-encoded without it. The stored file's SHA-256 is recorded. | Keeps redacted copies identical to the files their cached readings are keyed by. |
+| D29 | The `/ussd-sim` page posts to a server-side proxy that adds the shared secret. | The secret never reaches the browser. |
+| D30 | Observers sign up with an invite code from `OBSERVER_INVITE_CODE` (dev default `DEMO-OBSERVER`). Reviewer, ingest and admin accounts are created by the seeder. | Simulates accreditation without any registry data. |
+| D31 | The sheet page checks the rules live against the current values (model reading or reviewer values); `validation_result` keeps the pipeline's original check. | After a review, the page must show whether the corrected figures add up. |
+| D32 | Every verification (including a confirmation) gets a random 5-digit case reference, stored on the verification row. | USSD shows a reference after both "yes" and "no", and a repeat attempt can quote it. |
+
 ## M1 smoke results (10 Nov 2026; engineering checks, not reported metrics)
 
 - Both candidates load in 4-bit and produce schema-valid output on 3/3 real sheets: Qwen3.5-9B 10.5–12 s/sheet, peak 8.2 GB; Qwen3-VL-8B-Instruct 8.6–9.3 s/sheet, peak 6.8 GB (1.6 MP image budget, zero-shot, ~1,950–1,970 input tokens).
