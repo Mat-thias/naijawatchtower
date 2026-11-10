@@ -17,6 +17,8 @@ def test_parse_value():
     assert parse_value("?") == ILLEGIBLE
     assert parse_value("0412") == 412
     assert parse_value("5+74") == 79 and parse_value("1+2+3") == 6        # sum written in the cell
+    assert parse_value("5+74=79") == 79                                     # with its written result
+    assert parse_value("5+74=80") == 80                                     # the written result is the label
     for bad in ["12a", "10000", "-3", "5+", "+5", "5++7", "9000+1000"]:
         with pytest.raises(ValueError):
             parse_value(bad)

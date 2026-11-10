@@ -49,6 +49,8 @@ def test_resolve_items(zero_sheet):
     assert resolve_items(sug, "400 2=413") == "600 413 700 270 18 12 400 430"      # fill + correct
     assert resolve_items(sug, "1 2 3 4 5 6 7 8") == "1 2 3 4 5 6 7 8"              # whole line
     assert resolve_items(sug, "7=5+74") == "600 412 700 270 18 12 5+74 430"
+    assert resolve_items(sug, "5+74=79") == "600 412 700 270 18 12 5+74=79 430"   # written equation fills the gap
+    assert resolve_items(sug, "1 2 3 4 5 6 7 5+74=79").endswith("5+74=79")       # ... or sits in a full line
     with pytest.raises(ValueError, match="still to read"):
         resolve_items(sug, "")
     with pytest.raises(ValueError):

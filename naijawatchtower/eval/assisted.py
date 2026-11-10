@@ -78,9 +78,10 @@ class Suggestion:
 
 
 def _split(text: str) -> tuple[list[str], list[tuple[int, str]]]:
+    from naijawatchtower.eval.labelling import is_expression
     bare, pairs = [], []
     for tok in text.split():
-        if "=" in tok:
+        if "=" in tok and not is_expression(tok):              # '5+74=79' is a written sum, not n=value
             k, v = tok.split("=", 1)
             if not k.isdigit():
                 raise ValueError(f"expected n=value, got {tok!r}")

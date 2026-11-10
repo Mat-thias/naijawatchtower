@@ -46,7 +46,8 @@ def parse_value(token: str) -> Label:
     if token == ILLEGIBLE:
         return ILLEGIBLE
     if is_expression(token):
-        value = sum(int(part) for part in token.split("+"))
+        left, _, written = token.partition("=")
+        value = int(written) if written else sum(int(part) for part in left.split("+"))
     elif not token.isdigit():
         raise ValueError(f"not a number: {token!r}")
     else:
@@ -57,9 +58,10 @@ def parse_value(token: str) -> Label:
 
 
 def is_expression(token: str) -> bool:
-    """True for a sum written in a cell, such as '5+74'."""
-    parts = token.strip().split("+")
-    return len(parts) > 1 and all(p.isdigit() for p in parts)
+    """True for a sum written in a cell: '5+74', or with its written result '5+74=79' (the result is the label)."""
+    left, eq, written = token.strip().partition("=")
+    parts = left.split("+")
+    return len(parts) > 1 and all(p.isdigit() for p in parts) and (not eq or written.isdigit())
 
 
 def expression_notes(items_line: str, party_line: str, bottom: str) -> dict[str, str]:
