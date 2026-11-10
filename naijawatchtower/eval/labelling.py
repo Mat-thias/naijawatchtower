@@ -1,8 +1,9 @@
 """Human labelling of real sheets (CLAUDE.md 3.2).
 
-Matthias types every value first; only afterwards (`reconcile`) is the reader
-run and each disagreement re-checked against the image. This keeps the labels
-free of anchoring on the model and catches typing mistakes.
+Two modes. Typed: Matthias types every value; `reconcile` later re-checks each
+disagreement with the reader. Assisted (default since 10 Nov, D41): the model pre-fills
+only the fields it is very confident about and Matthias types the rest; every label
+records its provenance so the evaluation can report typed and model-assisted fields apart.
 
 Label values: an int, None (blank cell) or ILLEGIBLE ("?").
 CSV encoding: digits, "" for blank, "?" for illegible.
@@ -16,11 +17,14 @@ import hashlib
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Callable
+from typing import TYPE_CHECKING, Callable
 
 from naijawatchtower.config import (bottom_total_field, field_names, item_fields, max_value,
                                     party_fields, state_by_number)
 from naijawatchtower.ocr.types import SheetReader
+
+if TYPE_CHECKING:
+    from naijawatchtower.eval.assisted import Suggestion
 
 ILLEGIBLE = "?"
 Label = int | None | str
@@ -28,7 +32,7 @@ Ask = Callable[[str], str]
 Say = Callable[[str], None]
 
 IMAGE_SUFFIXES = {".jpg", ".jpeg", ".png", ".webp", ".bmp", ".tif", ".tiff"}
-SHEETS_HEADER = ["sheet_id", "file", "sha256", "state_code", "labelled_at", "reconciled_at"]
+SHEETS_HEADER = ["sheet_id", "file", "sha256", "state_code", "labelled_at", "reconciled_at", "label_mode"]
 
 
 def parse_value(token: str) -> Label:
@@ -121,10 +125,15 @@ class LabelStore:
     sheets: dict[str, dict[str, str]] = field(default_factory=dict)
     labels: dict[str, dict[str, Label]] = field(default_factory=dict)
     notes: dict[str, dict[str, str]] = field(default_factory=dict)    # e.g. a sum written in a cell
+    provenance: dict[str, dict[str, str]] = field(default_factory=dict)  # typed | model_accepted | model_corrected
 
     @property
     def notes_csv(self) -> Path:
         return self.data_dir / "label_notes.csv"
+
+    @property
+    def provenance_csv(self) -> Path:
+        return self.data_dir / "label_provenance.csv"
 
     @property
     def images_dir(self) -> Path:
@@ -153,6 +162,12 @@ class LabelStore:
             with store.notes_csv.open(newline="") as f:
                 for row in csv.DictReader(f):
                     store.notes.setdefault(row["sheet_id"], {})[row["field"]] = row["note"]
+        if store.provenance_csv.exists():
+            with store.provenance_csv.open(newline="") as f:
+                for row in csv.DictReader(f):
+                    store.provenance.setdefault(row["sheet_id"], {})[row["field"]] = row["provenance"]
+        for sheet_id in store.labels:                  # sheets labelled before assisted mode were typed
+            store.provenance.setdefault(sheet_id, {n: "typed" for n in store.labels[sheet_id]})
         return store
 
     def save(self) -> None:
@@ -181,6 +196,15 @@ class LabelStore:
                 for name, note in sorted(self.notes[sheet_id].items()):
                     writer.writerow([sheet_id, name, note])
         tmp.replace(self.notes_csv)
+        tmp = self.provenance_csv.with_suffix(".tmp")
+        with tmp.open("w", newline="") as f:
+            writer = csv.writer(f)
+            writer.writerow(["sheet_id", "field", "provenance"])
+            for sheet_id in sorted(self.provenance):
+                for name in field_names():
+                    if name in self.provenance[sheet_id]:
+                        writer.writerow([sheet_id, name, self.provenance[sheet_id][name]])
+        tmp.replace(self.provenance_csv)
 
     def image_files(self) -> list[Path]:
         """All images in `images/`, sorted by name."""
@@ -245,30 +269,50 @@ def format_labels(labels: dict[str, Label]) -> str:
     return f"  items 1-8: {items}\n  party rows: {parties}\n  bottom total: {bottom}"
 
 
-def label_sheet(ask: Ask, say: Say) -> tuple[int, dict[str, Label], dict[str, str]]:
-    """Collect the state number, all 27 labels and any notes (e.g. sums written in a cell) for one sheet."""
-    raw: dict[str, str] = {}
+def label_sheet(ask: Ask, say: Say, suggestion: "Suggestion | None" = None,
+                default_state: int | None = None) -> tuple[int, dict[str, Label], dict[str, str]]:
+    """Collect the state, all 27 labels and any notes (e.g. sums written in a cell) for one sheet.
 
-    def recording(key: str) -> Ask:
-        def inner(prompt: str) -> str:
-            raw[key] = ask(prompt)
-            return raw[key]
+    With a `suggestion`, confident model values are pre-filled and the rest shown as `_`
+    (see naijawatchtower/eval/assisted.py for how to answer).
+    """
+    from naijawatchtower.eval.assisted import resolve_bottom, resolve_items, resolve_party
+    resolved: dict[str, str] = {}
+
+    def resolving(key: str, resolve: Callable[[str], str], parse: Callable[[str], object]) -> Callable[[str], object]:
+        def inner(text: str) -> object:
+            line = resolve(text)
+            parsed = parse(line)
+            resolved[key] = line
+            return parsed
         return inner
 
     while True:
-        state = _ask_until_valid(ask, say, "State (name or number, e.g. 'Lagos' or '24'): ", _parse_state)
+        hint = f" [Enter = {state_by_number(default_state)['name']}]" if default_state else ""
+        state = _ask_until_valid(ask, say, f"State (name or number, e.g. 'Lagos' or '24'){hint}: ",
+                                 lambda s: default_state if (not s.strip() and default_state) else _parse_state(s))
         say(f"  -> {state_by_number(state)['name']}")  # type: ignore[arg-type]
         labels: dict[str, Label] = {}
-        labels.update(_ask_until_valid(  # type: ignore[arg-type]
-            recording("items"), say,
-            "Items 1-8, space-separated ('-' blank, '?' illegible, a written sum like 5+74 is fine): ", parse_items))
-        labels.update(_ask_until_valid(  # type: ignore[arg-type]
-            recording("parties"), say,
-            "Party rows as row=value (e.g. '2=120 14=37'); add *0 if every other row has 0 written; "
-            "Enter if all blank: ", parse_party_rows))
+        if suggestion is None:
+            items_q = "Items 1-8, space-separated ('-' blank, '?' illegible, a written sum like 5+74 is fine): "
+            party_q = ("Party rows as row=value (e.g. '2=120 14=37'); add *0 if every other row has 0 written; "
+                       "Enter if all blank: ")
+            bottom_q = "Bottom 'TOTAL VALID VOTES' row (Enter or '-' if blank): "
+            items_r = party_r = bottom_r = (lambda s: s)
+        else:
+            say(f"  Model pre-filled the fields it is very sure of; {suggestion.n_missing()} field(s) shown as _ "
+                "need you. Enter accepts; type missing values in order; n=value corrects one field.")
+            items_q = f"Items 1-8   [{' '.join(suggestion.items_tokens())}]: "
+            party_q = f"Party rows  [{suggestion.party_line() or '(all blank)'}]: "
+            bottom_q = f"Bottom total [{suggestion.bottom_token()}]: "
+            items_r = lambda s: resolve_items(suggestion, s)  # noqa: E731
+            party_r = lambda s: resolve_party(suggestion, s)  # noqa: E731
+            bottom_r = lambda s: resolve_bottom(suggestion, s)  # noqa: E731
+        labels.update(_ask_until_valid(ask, say, items_q, resolving("items", items_r, parse_items)))  # type: ignore[arg-type]
+        labels.update(_ask_until_valid(ask, say, party_q, resolving("parties", party_r, parse_party_rows)))  # type: ignore[arg-type]
         labels[bottom_total_field()] = _ask_until_valid(  # type: ignore[assignment]
-            recording("bottom"), say, "Bottom 'TOTAL VALID VOTES' row (Enter or '-' if blank): ", parse_value)
-        notes = expression_notes(raw.get("items", ""), raw.get("parties", ""), raw.get("bottom", ""))
+            ask, say, bottom_q, resolving("bottom", bottom_r, parse_value))
+        notes = expression_notes(resolved.get("items", ""), resolved.get("parties", ""), resolved.get("bottom", ""))
         say(format_labels(labels))
         for name, note in notes.items():
             say(f"  note: {name} {note} -> labelled as {encode(labels[name])}")
@@ -277,23 +321,34 @@ def label_sheet(ask: Ask, say: Say) -> tuple[int, dict[str, Label], dict[str, st
 
 
 def run_labelling(store: LabelStore, ask: Ask, say: Say,
-                  show_image: Callable[[Path], None] | None = None, limit: int | None = None) -> int:
-    """Label every unlabelled image (resumable). Returns the number labelled."""
+                  show_image: Callable[[Path], None] | None = None, limit: int | None = None,
+                  suggest: "Callable[[Path], Suggestion | None] | None" = None) -> int:
+    """Label every unlabelled image (resumable). Returns the number labelled.
+
+    `suggest` gives the model's confident values for an image (assisted mode), or None.
+    """
+    from naijawatchtower.eval.assisted import provenance
     todo = store.unlabelled()
     say(f"{len(todo)} image(s) to label, {len(store.labels)} already labelled.")
     done = 0
+    last_state: int | None = None
     for image in todo[:limit]:
         sheet_id = store.sheet_id_for(image) or store.next_sheet_id()
         say(f"\n=== {sheet_id}: {image.name} ===")
         if show_image:
             show_image(image)
-        state, labels, notes = label_sheet(ask, say)
+        suggestion = suggest(image) if suggest else None
+        if suggest and suggestion is None:
+            say("  (no model reading for this image yet: type every value)")
+        state, labels, notes = label_sheet(ask, say, suggestion, last_state)
+        last_state = state
         store.sheets[sheet_id] = {"sheet_id": sheet_id, "file": image.name,
                                   "sha256": sha256_file(image), "state_code": f"{state:03d}",
                                   "labelled_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-                                  "reconciled_at": ""}
+                                  "reconciled_at": "", "label_mode": "assisted" if suggestion else "typed"}
         store.labels[sheet_id] = labels
         store.notes[sheet_id] = notes
+        store.provenance[sheet_id] = provenance(suggestion, labels)
         store.save()
         done += 1
     return done

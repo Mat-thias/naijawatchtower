@@ -1,13 +1,14 @@
-"""Label real sheets by hand, then reconcile against the reader (CLAUDE.md 3.2).
+"""Label real sheets (CLAUDE.md 3.2), with model suggestions for the fields it is very sure of.
 
 Usage:
+  python scripts/prefill_labels.py             # once: the model reads every sheet (GPU)
   python scripts/label_real.py                 # label every unlabelled image (resumable)
-  python scripts/label_real.py --limit 5       # label at most 5 now
-  python scripts/label_real.py reconcile       # after M1: re-check each disagreement with the reader
+  python scripts/label_real.py --typed         # no suggestions: type every value
+  python scripts/label_real.py reconcile       # re-check typed labels where the reader disagrees
   python scripts/label_real.py status          # counts only
 
-Images: data_real/images/ (downloaded by hand in a browser). Output stays in data_real/.
-Typing: items 1-8 on one line ('-' blank, '?' illegible); party rows as row=value; bottom total.
+Answering a suggested line: Enter accepts; type the `_` values in order; n=value corrects field n.
+Typing format: items 1-8 on one line ('-' blank, '?' illegible); party rows as row=value; bottom total.
 """
 
 from __future__ import annotations
@@ -36,6 +37,19 @@ def open_in_viewer(image: Path) -> None:
     subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
 
 
+def make_suggester(data_dir: Path, min_conf: float | None):
+    """Suggestions from the pre-read model outputs in data_real/runs/prefill/ (scripts/prefill_labels.py)."""
+    from naijawatchtower.eval.assisted import PREFILL_MIN_CONF, Suggestion
+    from naijawatchtower.ocr.cache_reader import CacheReader
+    cache = CacheReader([data_dir / "runs" / "prefill"])
+
+    def suggest(image: Path):
+        if cache.path_for(image) is None:
+            return None
+        return Suggestion.from_reading(cache.read(image), min_conf or PREFILL_MIN_CONF)
+    return suggest
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("command", nargs="?", default="label", choices=["label", "reconcile", "status"])
@@ -44,6 +58,9 @@ def main() -> int:
     parser.add_argument("--no-viewer", action="store_true", help="do not open images")
     parser.add_argument("--reader", default=os.environ.get("VLM_BACKEND", "local"),
                         help="reader for reconcile: local (GPU) or cache")
+    parser.add_argument("--typed", action="store_true", help="no model suggestions: type every value")
+    parser.add_argument("--min-conf", type=float, default=None,
+                        help="pre-fill only fields at or above this model confidence (default 0.95)")
     args = parser.parse_args()
 
     store = LabelStore.load(args.data_dir)
@@ -55,7 +72,8 @@ def main() -> int:
         return 0
     try:
         if args.command == "label":
-            n = run_labelling(store, input, print, show, args.limit)
+            n = run_labelling(store, input, print, show, args.limit,
+                              suggest=None if args.typed else make_suggester(args.data_dir, args.min_conf))
             print(f"\nLabelled {n} sheet(s). Saved to {store.labels_csv}")
         else:
             from naijawatchtower.ocr.factory import make_reader

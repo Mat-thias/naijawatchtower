@@ -32,7 +32,10 @@ SWEEP = [0.5, 0.6, 0.7, 0.8, 0.85, 0.9, 0.95, 0.98, 0.99]
 CAVEATS = """> **Read these caveats before any number below.**
 > - The real sample is small (n is stated beside every figure), so confidence intervals are wide and the
 >   figures do not generalise to all sheets, states or elections.
-> - Labels were typed by one person (Matthias) and reconciled against the model's readings.
+> - Labels were made by one person (Matthias) with model assistance: fields the model was very confident
+>   about were pre-filled (by Qwen3-VL-8B, zero-shot) and checked; all other fields were typed from the sheet.
+>   Accepting a confident model error is not detectable, so accuracy may be overstated, most of all for
+>   the pre-filling model; accuracy on typed fields is reported separately.
 > - Most portal images are 1024-pixel-wide thumbnails; full-size images may read differently.
 > - Discrepancy detection is measured on number-level injections and simulated records, not on physically
 >   altered sheets, and arithmetic checks cannot catch a forgery that keeps all totals consistent.
