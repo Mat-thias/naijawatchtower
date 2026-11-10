@@ -90,7 +90,7 @@ def make_injection_copy(src: Path, dst: Path, text: str) -> Path:
     out.paste(img, (0, 0))
     draw = ImageDraw.Draw(out)
     size = max(14, img.height // 60)
-    words, lines, line = text.split(), [], ""
+    words, lines, line = text.split(), [], ""   # empty text -> blank margin (control copy)
     font = _font(size)
     for word in words:
         trial = f"{line} {word}".strip()

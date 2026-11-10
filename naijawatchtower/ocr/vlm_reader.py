@@ -31,6 +31,15 @@ def load_vlm_config(overrides: dict[str, Any] | None = None) -> dict[str, Any]:
     return cfg
 
 
+def resolve_commit(model_id: str, revision: str | None) -> str:
+    """Exact commit hash of the locally cached model snapshot (no network)."""
+    try:
+        from huggingface_hub import snapshot_download
+        return Path(snapshot_download(model_id, revision=revision, local_files_only=True)).name
+    except Exception:  # noqa: BLE001 - provenance only; never block reading
+        return revision or "unknown"
+
+
 def resize_to_budget(img, max_pixels: int):
     """Downscale (never upscale) so width*height <= max_pixels."""
     w, h = img.size
@@ -104,7 +113,7 @@ class VLMReader:
         self.grammar = OutputGrammar(lambda s: tok.encode(s, add_special_tokens=False), field_names(), eos)
         self.instruction = (ROOT / cfg["prompt"]).read_text()
         self.exemplars = exemplars or []
-        commit = getattr(self.model.config, "_commit_hash", None) or cfg.get("revision") or "unknown"
+        commit = resolve_commit(cfg["model_id"], cfg.get("revision"))
         self.model_revision = f"{cfg['model_id']}@{commit}:{quant}"
         self.prompt_version = f"{cfg['prompt_version']}+{len(self.exemplars)}shot-{cfg.get('exemplar_config', 'none')}"
 

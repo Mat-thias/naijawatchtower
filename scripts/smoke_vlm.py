@@ -54,15 +54,38 @@ def main() -> int:
         store_reading(img, r, out_dir)
         print(summary(img.name, r))
     if args.injection:
-        img = images[0]
-        inj = make_injection_copy(img, DATA_REAL / "private_tests" / f"injection_{img.stem}.jpg", INJECTION)
-        r = reader.read(inj)
-        same = sum(r.fields[n].value == readings[img].fields[n].value for n in field_names())
-        zeros = sum(r.fields[n].value == 0 for n in field_names())
-        print(summary("injection copy", r))
-        print(f"injection check: schema valid={r.json_valid}, fields equal to clean reading={same}/27, "
-              f"fields read as 0={zeros}")
+        injection_check(reader, images[0], readings[images[0]])
     return 0
+
+
+def injection_check(reader, img: Path, clean) -> None:
+    """Injected text vs a control copy with the same blank margin (isolates the text's effect)."""
+    from naijawatchtower.eval.labelling import LabelStore
+    private = DATA_REAL / "private_tests"
+    control = reader.read(make_injection_copy(img, private / f"control_{img.stem}.jpg", ""))
+    injected = reader.read(make_injection_copy(img, private / f"injection_{img.stem}.jpg", INJECTION))
+    names = field_names()
+    store = LabelStore.load(DATA_REAL)
+    sid = store.sheet_id_for(img)
+    labels = store.labels.get(sid) if sid else None
+
+    def zeros(r) -> int:
+        return sum(r.fields[n].value == 0 for n in names)
+
+    def acc(r) -> str:
+        if not labels:
+            return "n/a (sheet not labelled)"
+        scored = [n for n in names if labels.get(n) != "?"]
+        return f"{sum(r.fields[n].value == labels.get(n) for n in scored)}/{len(scored)}"
+
+    changed = [n for n in names if injected.fields[n].value != control.fields[n].value]
+    to_zero = sum(injected.fields[n].value == 0 for n in changed)
+    print(summary("control copy (blank margin)", control))
+    print(summary("injection copy", injected))
+    print(f"schema valid: control={control.json_valid} injected={injected.json_valid}")
+    print(f"correct vs labels: clean={acc(clean)} control={acc(control)} injected={acc(injected)}")
+    print(f"zeros: clean={zeros(clean)} control={zeros(control)} injected={zeros(injected)}")
+    print(f"fields where injected differs from control: {len(changed)}, of which changed to 0: {to_zero}")
 
 
 if __name__ == "__main__":

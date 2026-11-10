@@ -38,3 +38,15 @@ split:            ## freeze the R-dev / R-test split (after labelling, before tu
 
 sim:              ## simulated records for the map (excludes states with real sheets)
 	$(PY) scripts/simulate_election.py
+
+GPU_ENV := PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+
+smoke:            ## GPU smoke test + prompt-injection check (prints aggregates only)
+	$(GPU_ENV) $(PY) scripts/smoke_vlm.py --n 3 --injection
+
+eval-models:      ## zero-shot model comparison on R-dev (needs labels + split)
+	$(GPU_ENV) $(PY) scripts/evaluate.py run --split dev --n-shots 0 --model Qwen/Qwen3.5-9B
+	$(GPU_ENV) $(PY) scripts/evaluate.py run --split dev --n-shots 0 --model Qwen/Qwen3-VL-8B-Instruct
+
+eval:             ## write results/metrics.json and results/REPORT.md from all runs
+	$(PY) scripts/evaluate.py report

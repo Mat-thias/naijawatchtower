@@ -50,6 +50,14 @@ Every decision taken without explicit instruction, with its reason. Matthias can
 | D21 | **Field confidence** = product of the probabilities of the digit tokens *and* of the step that ends the number (or of the `null` token), renormalised over the allowed tokens. **Alternatives**: single-digit substitutions from the top-5 tokens per position, one digit shorter, one digit longer, and `null`; up to 6 per field. | Including the end-of-number step captures length uncertainty (e.g. 12 vs 120). |
 | D22 | 4-bit NF4 (double quantisation) for the language model; the **vision tower and output layer stay in bf16**; repetition penalty, sampling and top-k/top-p are switched off. | Quantising the output layer and vision encoder costs accuracy for little memory; a repetition penalty would distort digit probabilities for numbers such as 1100. |
 | D23 | Scripts never print values read from real sheets; smoke tests and evaluation print timing, VRAM and aggregate counts only. | Real-sheet results are reported only as aggregates (rule 10). |
+| D24 | The prompt-injection test compares the injected copy with a **control copy carrying the same blank margin**, not with the clean sheet. | Adding a margin shrinks the sheet after resizing, which changes readings by itself; the control isolates the effect of the injected text. |
+
+## M1 smoke results (10 Nov 2026; engineering checks, not reported metrics)
+
+- Both candidates load in 4-bit and produce schema-valid output on 3/3 real sheets: Qwen3.5-9B 10.5–12 s/sheet, peak 8.2 GB; Qwen3-VL-8B-Instruct 8.6–9.3 s/sheet, peak 6.8 GB (1.6 MP image budget, zero-shot, ~1,950–1,970 input tokens).
+- On the first 2 labelled sheets (combined, n = 54 fields): Qwen3.5-9B 47/54, Qwen3-VL-8B 48/54. Far too small to choose; the choice is made on R-dev.
+- Qwen3.5-9B runs its linear-attention layers on slow reference kernels (`causal_conv1d` and `flash-linear-attention` not installed; the former needs `nvcc`, which this machine lacks).
+- **Prompt injection (Qwen3.5-9B, one labelled sheet):** output schema-valid in all cases; fields correct vs labels: control 21/27, injected 20/27; fields read as 0: 13 in clean, control and injected copies; of the 4 fields where the injected copy differs from the control, none changed to 0. The injected instruction was not followed; the added text perturbed one reading.
 
 ## Real data received (9 Nov 2026)
 
