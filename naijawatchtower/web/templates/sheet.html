@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "_macros.html" import status_pill %}
+{% from "_macros.html" import status_pill, equation_panel, stepper %}
 {% block title %}{{ t('web.sheet.title', id=s.id) }}{% endblock %}
 {% block head %}{% if s.status == 'PROCESSING' %}<meta http-equiv="refresh" content="3">{% endif %}{% endblock %}
 {% block content %}
@@ -11,6 +11,7 @@
 </nav>
 <h1>{{ t('web.sheet.title', id=s.id) }} {{ status_pill(s.status, t) }}</h1>
 <p class="lede">{{ t('web.sheet.unit', code=s.unit.numeric_code, name=s.unit.name, ward=s.unit.ward, lga=s.unit.lga, state=s.unit.state) }}</p>
+{% if steps %}<section class="card stepper-card" aria-label="{{ t('web.sheet.journey') }}">{{ stepper(steps, t) }}</section>{% endif %}
 {% if flash %}<p class="success" role="status">{{ flash }}</p>{% endif %}
 {% if error %}<p class="notice" role="alert">{{ error }}</p>{% endif %}
 {% if s.status == 'PROCESSING' %}<p class="notice" role="status">{{ t('web.sheet.processing') }}</p>{% endif %}
@@ -36,7 +37,7 @@
       <tbody>
       {% for f in s.fields %}
         <tr class="{% if f.low_confidence or f.unclear %}low{% elif f.source == 'human_review' %}changed{% endif %}">
-          <th scope="row">{{ f.label }}
+          <th scope="row">{% if f.name.startswith('party_') %}{{ f.label }}{% else %}{{ field_label(f.name) }}{% endif %}
             {% if f.low_confidence %}<span class="flag">· {{ t('web.sheet.low') }}</span>{% endif %}
             {% if f.unclear %}<span class="flag">· {{ t('web.sheet.unclear') }}</span>{% endif %}
             {% if f.source == 'human_review' %}<span class="small muted">· {{ t('web.sheet.by_reviewer', old=f.model_value if f.model_value is not none else t('web.sheet.blank')) }}</span>{% endif %}
@@ -51,12 +52,11 @@
   </section>
 </div>
 
-<h2>{{ t('web.sheet.rules') }}</h2>
-{% set failed = s.rules | rejectattr('passed') | list %}
-{% if not failed %}<p class="success">{{ t('web.sheet.rules_ok') }}</p>{% endif %}
-{% for r in failed %}
-  <div class="rule {% if r.severity == 'soft' %}soft{% endif %}">{% if r.severity == 'soft' %}<strong>{{ t('web.sheet.soft') }}:</strong> {% endif %}{{ r.message }}</div>
-{% endfor %}
+{% if equations %}
+  {% set failed = equations | rejectattr('passed') | list %}
+  {% if not failed %}<p class="success">{{ t('web.sheet.rules_ok') }}</p>{% endif %}
+  {{ equation_panel(equations, t) }}
+{% endif %}
 
 {% set dec = s.detail.get('decoding') %}
 {% if dec and s.status not in ['REVIEWED', 'VERIFIED'] %}
@@ -90,10 +90,4 @@
 </form>
 {% elif can_verify == 'sign_in' %}<p class="muted">{{ t('web.verify.sign_in') }} <a href="/login?next=/sheet/{{ s.id }}">{{ t('web.nav.login') }}</a></p>
 {% elif can_verify == 'other_unit' %}<p class="muted">{{ t('web.verify.other_unit') }}</p>
-{% elif can_verify == 'not_ready' %}<p class="muted">{{ t('web.verify.not_ready') }}</p>{% endif %}
-
-<h2>{{ t('web.sheet.journey') }}</h2>
-<ol class="journey">
-  {% for step in s.journey %}<li>{{ step.step }}{% if step.ts %} <span class="small muted">({{ step.ts[:16] | replace('T', ' ') }} UTC)</span>{% endif %}</li>{% endfor %}
-</ol>
-{% endblock %}
+{% elif can_verify == 'not_ready' %}<p class="muted">{{ t('web.verify.not_ready') }}</p>{% endif %}{% endblock %}

@@ -31,7 +31,7 @@ All screenshots come from the demo (simulated records, fictional parties A–R).
 
 ![State page for Edo: progress tiles, local government areas and party totals for simulated records](docs/img/08-state-drilldown.png)
 
-**3. Every sheet shows its figures, confidence and arithmetic checks.** When the figures do not add up, the system searches for the most probable reading that would, and offers it to a reviewer as a *possible alternative reading*. It is never applied automatically.
+**3. Every sheet shows its figures, confidence, journey and arithmetic checks.** Each check is written out as an equation with the sheet's own figures (here item 7 says 726 but the party rows add up to 716). When the figures do not add up, the system searches for the most probable reading that would, and offers it to a reviewer as a *possible alternative reading*. It is never applied automatically.
 
 ![Sheet page: a failed rule in plain language and a suggested alternative reading](docs/img/02-sheet-suggestion.png)
 
@@ -43,7 +43,7 @@ All screenshots come from the demo (simulated records, fictional parties A–R).
 
 ![A USSD session in nine screens: menu, register, SMS opt-in, three pages of figures, the question, and the confirmation](docs/img/06-ussd-flow.png)
 
-**6. Reviewers work through a queue sorted by risk**, and must choose a reason for every decision. Disputed and rule-breaking sheets come first.
+**6. Reviewers work through a queue sorted by risk.** Each card says why the sheet is there (a dispute, a check that fails, low-confidence or unclear fields) and the lowest field confidence. Reviewers must choose a reason for every decision.
 
 ![Review queue sorted by risk](docs/img/03-review-queue.png)
 
@@ -51,7 +51,7 @@ All screenshots come from the demo (simulated records, fictional parties A–R).
 
 ![Discrepancies page with filters and export buttons](docs/img/04-discrepancies.png)
 
-**8. Every action is hash-chained**, so any later edit to the log is detectable.
+**8. Every action is hash-chained.** Each entry shows its own hash and the hash it follows, so any later edit to the log breaks every link after it.
 
 ![Audit log: chain intact and the latest entries](docs/img/10-audit-log.png)
 
@@ -66,7 +66,7 @@ make setup     # Python 3.12 venv via uv + CPU dependencies
 make demo      # seeds the demo database and serves http://127.0.0.1:8000
 ```
 
-Then **Sign in → Demo accounts** to act as a citizen, observer, reviewer or ingest operator; `/ussd-sim` is a phone simulator for the USSD channel. `make test` runs 85 tests without a GPU. The 3-minute walkthrough is in [`docs/DEMO_SCRIPT.md`](docs/DEMO_SCRIPT.md).
+Then **Sign in → Demo accounts** to act as a citizen, observer, reviewer or ingest operator; `/ussd-sim` is a phone simulator for the USSD channel. `make test` runs 88 tests without a GPU. The 3-minute walkthrough is in [`docs/DEMO_SCRIPT.md`](docs/DEMO_SCRIPT.md).
 
 With an NVIDIA GPU (12 GB): `make setup-gpu`, then `make demo-live` reads newly uploaded sheets with the model.
 

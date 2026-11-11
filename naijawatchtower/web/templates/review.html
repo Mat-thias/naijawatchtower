@@ -6,19 +6,35 @@
 <p class="lede">{{ t('web.review.intro') }}</p>
 {% if flash %}<p class="success" role="status">{{ flash }}</p>{% endif %}
 {% if not queue %}<p>{{ t('web.review.empty') }}</p>{% else %}
-<div class="table-scroll">
-<table id="queue">
-  <thead><tr><th scope="col" class="num">{{ t('web.review.risk') }}</th><th scope="col">{{ t('web.sheet.title', id='') }}</th>
-    <th scope="col">{{ t('web.table.status') }}</th><th scope="col">{{ t('web.review.reasons') }}</th><th scope="col"></th></tr></thead>
-  <tbody>
+<ul class="queue" id="queue">
   {% for q in queue %}
-    <tr><td class="num">{{ q.risk }}</td><td>{{ q.sheet_id }} · {{ q.unit }} <span class="small muted">({{ t('web.source.real') if q.source == 'real_redacted' else t('web.source.sim') }})</span></td>
-      <td>{{ status_pill(q.status, t) }}</td><td class="small">{{ q.reasons | join('; ') }}{% if q.pending_corrections %}; corrections pending{% endif %}</td>
-      <td><a class="button secondary review-link" href="/review/{{ q.sheet_id }}">{{ t('web.review.open') }}</a></td></tr>
+  {%- set tone = 'bad' if q.status == 'DISPUTED' else ('warn' if q.badges else 'neutral') -%}
+  <li class="qcard {{ tone }}">
+    <div class="qmain">
+      <div class="qtitle">
+        <strong>{{ t('web.sheet.title', id=q.sheet_id) }}</strong>
+        <span class="muted">· {{ q.numeric_code }} · {{ q.state }}</span>
+        {{ status_pill(q.status, t) }}
+        <span class="pill neutral">{{ t('web.source.real') if q.source == 'real_redacted' else t('web.source.sim') }}</span>
+      </div>
+      <div class="badges">
+        {% for b in q.badges %}
+          {% if b.key in ('low', 'unclear') %}<span class="badge warn">{{ t('web.queue.reason.' ~ b.key, n=b.n) }}</span>
+          {% elif b.key == 'rules' %}<span class="badge warn">{{ t('web.queue.reason.rules') }} ({{ b.detail }})</span>
+          {% else %}<span class="badge bad">{{ t('web.queue.reason.' ~ b.key) }}</span>{% endif %}
+        {% endfor %}
+        {% if q.pending_corrections %}<span class="badge info">{{ t('web.queue.pending') }}</span>{% endif %}
+      </div>
+      <div class="qmeta small muted">
+        <span>{{ t('web.review.risk') }} {{ q.risk }}</span>
+        {% if q.min_confidence is not none %}<span>{{ t('web.queue.lowest_conf', pct='%.0f%%' % (100 * q.min_confidence)) }}</span>{% endif %}
+        <span>{{ t('web.queue.uploaded', when=q.uploaded_at | replace('T', ' ')) }}</span>
+      </div>
+    </div>
+    <a class="button review-link" href="/review/{{ q.sheet_id }}">{{ t('web.review.open') }} →</a>
+  </li>
   {% endfor %}
-  </tbody>
-</table>
-</div>
+</ul>
 {% endif %}
 {% endblock %}
 {% block scripts %}

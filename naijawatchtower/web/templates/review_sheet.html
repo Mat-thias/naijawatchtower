@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "_macros.html" import status_pill %}
+{% from "_macros.html" import status_pill, equation_panel %}
 {% block title %}{{ t('web.review.sheet_title', id=s.id) }}{% endblock %}
 {% block content %}
 <p class="small"><a href="/review">← {{ t('web.review.title') }}</a> · <a href="/sheet/{{ s.id }}">{{ t('web.sheet.title', id=s.id) }}</a></p>
@@ -9,8 +9,7 @@
   <section>
     {% if s.image_url %}<img class="sheet-image" src="{{ s.image_url }}" alt="{{ t('web.sheet.image_alt') }}">
     {% else %}<div class="sim-panel">{{ t('web.sheet.simulated_panel') }}</div>{% endif %}
-    {% set failed = s.rules | rejectattr('passed') | list %}
-    {% for r in failed %}<div class="rule {% if r.severity == 'soft' %}soft{% endif %}">{{ r.message }}</div>{% endfor %}
+    {% if equations %}{{ equation_panel(equations, t) }}{% endif %}
     {% if s.detail.get('decoding') %}<p class="small muted">Decoding: {{ s.detail.decoding.outcome }}</p>{% endif %}
   </section>
   <form method="post" action="/review/{{ s.id }}" id="review-form" class="card">
@@ -19,7 +18,7 @@
       <tbody>
       {% for f in s.fields %}
         <tr class="{% if f.low_confidence or f.unclear %}low{% endif %}">
-          <th scope="row"><label for="f_{{ f.name }}">{{ f.label }}</label>
+          <th scope="row"><label for="f_{{ f.name }}">{% if f.name.startswith('party_') %}{{ f.label }}{% else %}{{ field_label(f.name) }}{% endif %}</label>
             {% if f.low_confidence %}<span class="flag">· {{ t('web.sheet.low') }}</span>{% endif %}
             {% if f.has_suggestion %}<span class="small">· {{ t('web.review.suggested', v=f.suggestion if f.suggestion is not none else t('web.sheet.blank')) }}</span>{% endif %}</th>
           <td><input id="f_{{ f.name }}" name="f_{{ f.name }}" type="number" min="0" max="9999" inputmode="numeric"

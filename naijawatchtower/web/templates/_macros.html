@@ -4,10 +4,20 @@
   <span class="pill {{ cls }}">{{ t('web.status.' ~ status) }}</span>
 {%- endmacro %}
 
+{% macro bar(value, total, cls='') -%}
+  {%- set pct = (100 * value / total) if total else 0 -%}
+  <span class="bar {{ cls }}" role="presentation"><span style="width:{{ '%.0f' % pct }}%"></span></span>
+{%- endmacro %}
+
 {% macro tiles(cov, t) -%}
 <div class="tiles">
-  {% for key in ['expected', 'digitised', 'needs_review', 'reviewed', 'verified', 'disputed'] %}
-  <div class="tile"><div class="num">{{ cov[key] }}</div><div class="lbl">{{ t('web.tile.' ~ key) }}</div></div>
+  {% for key, cls in [('expected', 'muted'), ('digitised', ''), ('needs_review', 'warn'), ('reviewed', 'ok'), ('verified', 'ok'), ('disputed', 'bad')] %}
+  <div class="tile {{ cls }}">
+    <div class="num">{{ cov[key] }}</div>
+    <div class="lbl">{{ t('web.tile.' ~ key) }}</div>
+    {{ bar(cov[key], cov['expected'], cls) }}
+    {% if key != 'expected' and cov['expected'] %}<div class="sub">{{ t('web.tile.of_expected', pct='%.0f%%' % (100 * cov[key] / cov['expected'])) }}</div>{% endif %}
+  </div>
   {% endfor %}
 </div>
 {%- endmacro %}
@@ -46,4 +56,44 @@
 </table>
 </div>
 {% endif %}
+{%- endmacro %}
+
+{% macro equation_panel(equations, t) -%}
+<section class="eq-panel" aria-labelledby="eq-h">
+  <h2 id="eq-h">{{ t('web.eq.title') }}</h2>
+  <ul class="eq-list">
+  {% for e in equations %}
+    {%- set state = 'skip' if e.skipped else ('pass' if e.passed else ('soft' if e.severity == 'soft' else 'fail')) -%}
+    <li class="eq {{ state }}">
+      <div class="eq-head">
+        <span class="eq-badge">{% if state == 'pass' %}✓ {{ t('web.eq.pass') }}{% elif state == 'skip' %}– {{ t('web.eq.skipped') }}{% elif state == 'soft' %}! {{ t('web.eq.soft_fail') }}{% else %}✗ {{ t('web.eq.fail') }}{% endif %}</span>
+        <span class="eq-msg">{{ e.message }}</span>
+      </div>
+      {% if e.text %}<div class="eq-body muted small">{{ e.text }}</div>
+      {% else %}
+      <div class="eq-body">
+        <span class="eq-term"><span class="eq-lbl">{{ e.lhs[0] }}</span><span class="eq-val">{{ e.lhs[1] }}</span></span>
+        <span class="eq-op">{% if e.passed %}{{ e.op }}{% else %}{{ '≠' if e.op == '=' else '>' }}{% endif %}</span>
+        {% for label, value in e.terms %}
+          {% if not loop.first %}<span class="eq-op">+</span>{% endif %}
+          <span class="eq-term"><span class="eq-lbl">{{ label }}</span><span class="eq-val">{{ value }}</span></span>
+        {% endfor %}
+        {% if e.terms|length > 1 %}<span class="eq-op">=</span><span class="eq-term total"><span class="eq-lbl">&nbsp;</span><span class="eq-val">{{ e.total }}</span></span>{% endif %}
+      </div>
+      {% endif %}
+    </li>
+  {% endfor %}
+  </ul>
+</section>
+{%- endmacro %}
+
+{% macro stepper(steps, t) -%}
+<ol class="stepper">
+  {% for s in steps %}
+  <li class="step {{ s.state }}" {% if s.state == 'current' %}aria-current="step"{% endif %}>
+    <span class="dot" aria-hidden="true">{% if s.state == 'done' %}✓{% elif s.state == 'flag' %}!{% elif s.state == 'skipped' %}–{% else %}{{ loop.index }}{% endif %}</span>
+    <span class="step-text"><strong>{{ s.title }}</strong>{% if s.sub %}<span class="small muted">{{ s.sub }}</span>{% endif %}{% if s.ts %}<span class="small muted">{{ s.ts }} UTC</span>{% endif %}</span>
+  </li>
+  {% endfor %}
+</ol>
 {%- endmacro %}

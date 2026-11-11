@@ -3,19 +3,25 @@
 {% block content %}
 <h1>{{ t('web.audit.title') }}</h1>
 <p class="lede">{{ t('web.audit.intro') }}</p>
-{% if chain.ok %}<p class="success" role="status">{{ t('web.audit.ok', n=chain.entries) }}</p>
-{% else %}<p class="rule" role="alert">{{ t('web.audit.broken', id=chain.first_broken_id) }}</p>{% endif %}
-<div class="table-scroll">
-<table>
-  <thead><tr><th scope="col">#</th><th scope="col">{{ t('web.audit.when') }}</th><th scope="col">{{ t('web.audit.who') }}</th>
-    <th scope="col">{{ t('web.audit.what') }}</th><th scope="col">{{ t('web.audit.hash') }}</th></tr></thead>
-  <tbody>
+{% if chain.ok %}<p class="success" role="status">✓ {{ t('web.audit.ok', n=chain.entries) }}</p>
+{% else %}<p class="rule" role="alert">✗ {{ t('web.audit.broken', id=chain.first_broken_id) }}</p>{% endif %}
+<p class="small muted">{{ t('web.audit.chain_note') }}</p>
+<ol class="chain" reversed>
   {% for e in entries %}
-    <tr><td>{{ e.id }}</td><td class="small">{{ e.ts[:19] | replace('T', ' ') }}</td><td>{{ e.actor_role }}</td>
-      <td>{{ e.action }}{% if e.sheet_id %} · <a href="/sheet/{{ e.sheet_id }}">{{ e.sheet_id }}</a>{% endif %}</td>
-      <td class="hash">{{ e.entry_hash[:16] }}…</td></tr>
+  <li class="chain-entry">
+    <div class="chain-head">
+      <span class="chain-id">#{{ e.id }}</span>
+      <strong class="chain-action">{{ e.action }}</strong>
+      {% if e.sheet_id %}<a href="/sheet/{{ e.sheet_id }}">{{ t('web.sheet.title', id=e.sheet_id) }}</a>{% endif %}
+      <span class="pill neutral">{{ e.actor_role }}</span>
+      <span class="small muted">{{ e.ts[:19] | replace('T', ' ') }} UTC</span>
+    </div>
+    <div class="chain-hash small">
+      <span class="hash" title="{{ e.entry_hash }}">{{ e.entry_hash[:16] }}…</span>
+      <span class="muted">{{ t('web.audit.prev') }}</span>
+      <span class="hash muted" title="{{ e.prev_hash }}">{{ e.prev_hash[:16] }}…</span>
+    </div>
+  </li>
   {% endfor %}
-  </tbody>
-</table>
-</div>
+</ol>
 {% endblock %}

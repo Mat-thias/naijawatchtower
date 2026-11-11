@@ -240,9 +240,10 @@ def register(app: FastAPI) -> None:
             return render(request, "area.html", user, status_code=404, title="Not found", agg=empty_agg(), rows=[],
                           list_title="", crumbs=[("/", "Nigeria"), ("", "Not found")], has_real=False,
                           show_totals=False)
-        flash = t(lang_of(request), "web.verify.done", ref=ref) if ref and ref.isdigit() else None
+        lang = lang_of(request)
+        flash = t(lang, "web.verify.done", ref=ref) if ref and ref.isdigit() else None
         return render(request, "sheet.html", user, s=sheet_detail(db, sheet), can_verify=can_verify(user, sheet),
-                      flash=flash)
+                      flash=flash, **explain_ctx(db, sheet, lang))
 
     @app.post("/sheet/{sheet_id}/verify")
     def sheet_verify(request: Request, sheet_id: int, verdict: str = Form(...), comment: str = Form(""),
@@ -253,7 +254,8 @@ def register(app: FastAPI) -> None:
             return RedirectResponse(f"/login?next=/sheet/{sheet_id}", status_code=303)
         if not app.state.verify_bucket.allow(str(user.id)):
             return render(request, "sheet.html", user, s=sheet_detail(db, sheet), can_verify="no",
-                          error="Too many verification attempts. Try again later.", status_code=429)
+                          error="Too many verification attempts. Try again later.", status_code=429,
+                          **explain_ctx(db, sheet, lang_of(request)))
         corrections = []
         if correction_field and correction_value.strip().isdigit():
             corrections = [(correction_field, int(correction_value))]
@@ -263,7 +265,7 @@ def register(app: FastAPI) -> None:
         except services.ServiceError as err:
             db.rollback()
             return render(request, "sheet.html", user, s=sheet_detail(db, sheet), can_verify="no",
-                          error=err.message, status_code=err.status)
+                          error=err.message, status_code=err.status, **explain_ctx(db, sheet, lang_of(request)))
         return RedirectResponse(f"/sheet/{sheet_id}?ref={result.case_ref}", status_code=303)
 
     # -------------------------------------------------------------- review
@@ -281,7 +283,7 @@ def register(app: FastAPI) -> None:
             return RedirectResponse(f"/login?next=/review/{sheet_id}", status_code=303)
         sheet = db.get(ResultSheet, sheet_id)
         return render(request, "review_sheet.html", user, active="/review", s=sheet_detail(db, sheet),
-                      reason_codes=list(services.vconfig()["reason_codes"]))
+                      reason_codes=list(services.vconfig()["reason_codes"]), **explain_ctx(db, sheet, lang_of(request)))
 
     @app.post("/review/{sheet_id}")
     async def review_submit(request: Request, sheet_id: int, user: User | None = Depends(current_user),
@@ -302,7 +304,8 @@ def register(app: FastAPI) -> None:
         except services.ServiceError as err:
             db.rollback()
             return render(request, "review_sheet.html", user, s=sheet_detail(db, sheet), error=err.message,
-                          reason_codes=list(services.vconfig()["reason_codes"]), status_code=err.status)
+                          reason_codes=list(services.vconfig()["reason_codes"]), status_code=err.status,
+                          **explain_ctx(db, sheet, lang_of(request)))
         return RedirectResponse("/review", status_code=303)
 
     # -------------------------------------------------------------- upload (ingest role)
@@ -375,6 +378,18 @@ def register(app: FastAPI) -> None:
 
 
 # ------------------------------------------------------------------ helpers
+
+def explain_ctx(db: Session, sheet: ResultSheet, lang: str) -> dict[str, Any]:
+    """Equations with this sheet's current figures, and its journey stepper."""
+    from naijawatchtower.api.pipeline import value_map
+    from naijawatchtower.web.explain import equations, field_label, stepper
+
+    def tr(key: str, **kw: Any) -> str:
+        return t(lang, key, **kw)
+    has_values = sheet.status != "PROCESSING"
+    return {"equations": equations(value_map(db, sheet.id), tr) if has_values else [],
+            "steps": stepper(db, sheet, tr), "field_label": lambda n: field_label(n, tr)}
+
 
 def safe_next(next_url: str) -> str:
     """Only allow local redirects."""

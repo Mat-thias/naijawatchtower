@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "_macros.html" import coverage_groups, party_totals %}
+{% from "_macros.html" import coverage_groups, party_totals, bar %}
 {% block title %}{{ t('web.dash.title') }}{% endblock %}
 {% block content %}
 <h1>{{ t('web.dash.title') }}</h1>
@@ -51,7 +51,7 @@
       <td>{% if s.real_count %}{{ t('web.source.real') }}{% elif s.simulated_count %}{{ t('web.source.sim') }}{% else %}{{ t('web.source.none') }}{% endif %}</td>
       <td class="num">{{ s.expected }}</td><td class="num">{{ s.digitised }}</td><td class="num">{{ s.verified }}</td>
       <td class="num">{{ s.reviewed }}</td><td class="num">{{ s.open_discrepancies }}</td>
-      <td>{{ s.value_text }}</td></tr>
+      <td class="value-cell">{% if s.value is not none and layer != 'discrepancies' %}{{ bar(s.value, 1) }}{% endif %}<span>{{ s.value_text }}</span></td></tr>
   {% endfor %}
   </tbody>
 </table>

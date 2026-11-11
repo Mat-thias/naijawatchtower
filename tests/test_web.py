@@ -14,6 +14,7 @@ from naijawatchtower.api.security import make_token
 from naijawatchtower.api.seed import add_sim_record
 from naijawatchtower.config import ROOT
 from tests.conftest import consistent_values
+from naijawatchtower.ocr.types import FieldReading
 from tests.test_api import auth, env, ready_sheet, reading_of, upload  # noqa: F401
 
 HTML = {"Accept": "text/html"}
@@ -206,3 +207,35 @@ def test_login_flow_and_demo_accounts(site, caplog):
                follow_redirects=False)
     assert r.status_code == 401
     c.cookies.clear()
+
+
+def test_equations_use_the_sheets_figures(sheet):
+    from naijawatchtower.web.explain import equations
+    tr = lambda key, **kw: key + (str(kw) if kw else "")  # noqa: E731
+    eqs = equations(sheet, tr)
+    assert all(e["passed"] for e in eqs)
+    r1 = next(e for e in eqs if e["rule_id"] == "R1")
+    assert r1["lhs"][1] == 430 and [v for _, v in r1["terms"]] == [18, 12, 400] and r1["total"] == 430
+    broken = equations({**sheet, "total_used_ballots": 431}, tr)
+    assert broken[0]["rule_id"] == "R1" and not broken[0]["passed"]          # failures first
+    assert next(e for e in equations({**sheet, "total_valid_votes_bottom": None}, tr)
+                if e["rule_id"] == "R3")["skipped"]
+
+
+def test_sheet_page_equation_panel_and_stepper(site):
+    with site["sessions"]() as db:
+        sid = db.execute(select(ResultSheet.id).where(ResultSheet.source == "simulated")).scalars().first()
+    text = page(site, f"/sheet/{sid}").text
+    assert "Arithmetic checks, with this sheet&#39;s figures" in text or "Arithmetic checks, with this sheet's figures" in text
+    assert "Item 8 · Total used ballot papers" in text and "✓ adds up" in text
+    assert 'class="stepper"' in text and "Simulated record created (no photo)" in text
+
+
+def test_review_cards_show_reasons(site):
+    values = consistent_values()
+    tampered = FieldReading.of(156, 0.99, alternatives=((156, 0.99),))
+    site["reader"].next.append(reading_of(values, overrides={"party_07": tampered}))
+    upload(site, site["codes"][2], seed=21)
+    site["app"].state.queue.drain()
+    text = page(site, "/review", who="reviewer").text
+    assert "Arithmetic does not add up (R2)" in text and "lowest field confidence" in text

@@ -252,10 +252,27 @@ def review_queue(db: Session) -> list[dict[str, Any]]:
     rows = []
     for s in sheets:
         unit = db.get(PollingUnit, s.pu_id)
-        rows.append({"sheet_id": s.id, "unit": unit.code, "source": s.source, "status": s.status,
-                     "outcome": s.pipeline_outcome, "risk": round(risk_score(db, s), 2),
-                     "pending_corrections": s.id in pending,
-                     "reasons": json.loads(s.pipeline_detail_json or "{}").get("reasons", [])})
+        detail = json.loads(s.pipeline_detail_json or "{}")
+        confs = [c for c in db.execute(select(ExtractedField.confidence).where(
+            ExtractedField.sheet_id == s.id, ExtractedField.source == "model")).scalars() if c is not None]
+        badges = []
+        if any(r.startswith("rules failed") for r in detail.get("reasons", [])):
+            badges.append({"key": "rules", "detail": next(r for r in detail["reasons"] if r.startswith("rules failed"))
+                           .removeprefix("rules failed: ")})
+        if s.status == "DISPUTED":
+            badges.append({"key": "dispute", "detail": ""})
+        if s.status == "UNREADABLE":
+            badges.append({"key": "unreadable", "detail": ""})
+        if detail.get("low_confidence"):
+            badges.append({"key": "low", "n": len(detail["low_confidence"])})
+        if detail.get("unclear"):
+            badges.append({"key": "unclear", "n": len(detail["unclear"])})
+        rows.append({"sheet_id": s.id, "unit": unit.code, "numeric_code": unit.numeric_code, "state": unit.state_name,
+                     "source": s.source, "status": s.status, "outcome": s.pipeline_outcome,
+                     "risk": round(risk_score(db, s), 2), "pending_corrections": s.id in pending,
+                     "reasons": detail.get("reasons", []), "badges": badges,
+                     "min_confidence": round(min(confs), 4) if confs else None,
+                     "uploaded_at": s.uploaded_at.isoformat(timespec="minutes")})
     return sorted(rows, key=lambda r: (-r["risk"], r["sheet_id"]))
 
 

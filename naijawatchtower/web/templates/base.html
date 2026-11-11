@@ -16,7 +16,10 @@
 </div>
 <header class="site">
   <div class="site-inner">
-    <a class="brand" href="/">{{ t('web.brand') }}</a>
+    <a class="brand" href="/" aria-label="{{ t('web.brand') }}: {{ t('web.brand_tagline') }}">
+      <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="currentColor" opacity=".16"/><path d="M16 5l4 6h-2.5l2 16h-7l2-16H12z" fill="currentColor"/><circle cx="16" cy="8.5" r="1.4" fill="#fbbf24"/></svg>
+      <span><span class="brand-name">{{ t('web.brand') }}</span><span class="brand-tag">{{ t('web.brand_tagline') }}</span></span>
+    </a>
     <nav class="main" aria-label="Main">
       {% for href, key, roles in nav %}
         {% if not roles or (user and user.role in roles) %}
