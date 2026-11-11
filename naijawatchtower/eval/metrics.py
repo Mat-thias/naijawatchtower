@@ -73,6 +73,19 @@ def blank_acc(evals: Sequence[SheetEval]) -> float:
     return sum(xs) / len(xs) if xs else float("nan")
 
 
+def value_equivalent_acc(evals: Sequence[SheetEval]) -> float:
+    """Field accuracy when a blank cell and a written 0 count as the same (both are 0 in every sum)."""
+    hits = total = 0
+    for e in evals:
+        for n in field_names():
+            label = e.labels.get(n)
+            if label == ILLEGIBLE:
+                continue
+            total += 1
+            hits += (e.reading.fields[n].value or 0) == (label or 0)
+    return hits / total if total else float("nan")
+
+
 def sheet_acc(evals: Sequence[SheetEval]) -> float:
     return sum(e.exact for e in evals) / len(evals) if evals else float("nan")
 
@@ -92,6 +105,7 @@ def reader_metrics(evals: Sequence[SheetEval]) -> dict:
         "field_accuracy": ci(bootstrap(evals, field_acc)),
         "nonblank_field_accuracy": ci(bootstrap(evals, nonblank_acc)),
         "blank_field_accuracy": ci(bootstrap(evals, blank_acc)),
+        "value_equivalent_field_accuracy": ci(bootstrap(evals, value_equivalent_acc)),
         "sheet_exact_match": ci(bootstrap(evals, sheet_acc)),
         "json_valid_rate": round(sum(e.reading.json_valid for e in evals) / len(evals), 4) if evals else None,
         "seconds_median": round(statistics.median(secs), 2) if secs else None,

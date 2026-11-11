@@ -1,0 +1,86 @@
+{
+ "discrepancy_detection_simulated": {
+  "dataset": "simulated records (numbers only)",
+  "n_records": 3500,
+  "per_defect": {
+   "none": {
+    "n": 500,
+    "flagged_by_rules": 0.0,
+    "discrepancy_opened": 0.0,
+    "sent_to_human_review": 0.0
+   },
+   "tampered_digit": {
+    "n": 500,
+    "flagged_by_rules": 1.0,
+    "discrepancy_opened": 0.274,
+    "sent_to_human_review": 1.0
+   },
+   "sum_mismatch_entry": {
+    "n": 500,
+    "flagged_by_rules": 1.0,
+    "discrepancy_opened": 0.904,
+    "sent_to_human_review": 1.0
+   },
+   "overvote": {
+    "n": 500,
+    "flagged_by_rules": 1.0,
+    "discrepancy_opened": 0.512,
+    "sent_to_human_review": 1.0
+   },
+   "illegible": {
+    "n": 500,
+    "flagged_by_rules": 0.43,
+    "discrepancy_opened": 0.0,
+    "sent_to_human_review": 1.0
+   },
+   "low_confidence": {
+    "n": 500,
+    "flagged_by_rules": 0.0,
+    "discrepancy_opened": 0.0,
+    "sent_to_human_review": 1.0
+   },
+   "close_alternative": {
+    "n": 500,
+    "flagged_by_rules": 0.0,
+    "discrepancy_opened": 0.0,
+    "sent_to_human_review": 1.0
+   }
+  },
+  "rule_flag_precision": 0.8746,
+  "note": "A consistent forgery (all totals edited to agree) is not caught by arithmetic checks."
+ },
+ "sybil_simulation": {
+  "without_observer": {
+   "attackers_to_mark_correct_sheet_disputed": 2,
+   "burst_flag_raised_within_10_attackers": true,
+   "attackers_to_verify_wrong_sheet": 3,
+   "final_status_wrong_sheet_after_10_attackers": "VERIFIED"
+  },
+  "with_observer": {
+   "attackers_to_mark_correct_sheet_disputed": 2,
+   "burst_flag_raised_within_10_attackers": true,
+   "attackers_to_verify_wrong_sheet": null,
+   "final_status_wrong_sheet_after_10_attackers": "DISPUTED"
+  },
+  "note": "Disputes only send a sheet to human review; attackers cannot change figures. Citizen registration is self-declared, so this is a signal, not proof."
+ },
+ "ussd": {
+  "inputs_check": 1,
+  "inputs_verify_yes": 5,
+  "verify_lines_on_example_sheet": 10,
+  "screens_walked": 342,
+  "max_screen_chars": 157,
+  "share_screens_within_160": 1.0,
+  "targets": {
+   "check": "<= 3 inputs",
+   "verify_yes": "<= 8 inputs"
+  }
+ },
+ "geo": {
+  "regions": 37,
+  "svg_bytes": 62978,
+  "svg_gzip_bytes": 19620,
+  "render_ms_median": 1.8,
+  "budget_bytes": 300000
+ }
+}

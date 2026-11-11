@@ -1,0 +1,969 @@
+{
+ "generated": "2026-11-11T13:30:26+00:00",
+ "runs": {
+  "Qwen3-VL-8B-Instruct-0shot-none-dev": {
+   "dataset": "R-dev",
+   "model": "Qwen/Qwen3-VL-8B-Instruct",
+   "prompt": null,
+   "n_shots": 0,
+   "exemplar_config": "none",
+   "reader": {
+    "n_sheets": 4,
+    "n_fields_scored": 108,
+    "n_fields_nonblank": 105,
+    "n_fields_illegible_excluded": 0,
+    "field_accuracy": {
+     "value": 0.4815,
+     "ci_low": 0.2593,
+     "ci_high": 0.7222
+    },
+    "nonblank_field_accuracy": {
+     "value": 0.4952,
+     "ci_low": 0.2692,
+     "ci_high": 0.75
+    },
+    "blank_field_accuracy": {
+     "value": 0.0,
+     "ci_low": 0.0,
+     "ci_high": 0.0
+    },
+    "value_equivalent_field_accuracy": {
+     "value": 0.75,
+     "ci_low": 0.6296,
+     "ci_high": 0.8704
+    },
+    "sheet_exact_match": {
+     "value": 0.0,
+     "ci_low": 0.0,
+     "ci_high": 0.0
+    },
+    "json_valid_rate": 1.0,
+    "seconds_median": 8.59,
+    "seconds_p95": 11.42,
+    "vram_peak_mb": 6787.0,
+    "input_tokens_median": 1583.0
+   },
+   "calibration": {
+    "temperature": 20.0,
+    "n_fields": 108,
+    "ece_before": 0.4135,
+    "ece_after": 0.1232
+   },
+   "system": {
+    "risk_coverage": [
+     {
+      "field_conf_min": 0.5,
+      "auto_ok_share": 0.0,
+      "error_rate_among_auto_ok": null,
+      "wrong_but_accepted_share": 0.0,
+      "human_review_share": 1.0
+     },
+     {
+      "field_conf_min": 0.6,
+      "auto_ok_share": 0.0,
+      "error_rate_among_auto_ok": null,
+      "wrong_but_accepted_share": 0.0,
+      "human_review_share": 1.0
+     },
+     {
+      "field_conf_min": 0.7,
+      "auto_ok_share": 0.0,
+      "error_rate_among_auto_ok": null,
+      "wrong_but_accepted_share": 0.0,
+      "human_review_share": 1.0
+     },
+     {
+      "field_conf_min": 0.8,
+      "auto_ok_share": 0.0,
+      "error_rate_among_auto_ok": null,
+      "wrong_but_accepted_share": 0.0,
+      "human_review_share": 1.0
+     },
+     {
+      "field_conf_min": 0.85,
+      "auto_ok_share": 0.0,
+      "error_rate_among_auto_ok": null,
+      "wrong_but_accepted_share": 0.0,
+      "human_review_share": 1.0
+     },
+     {
+      "field_conf_min": 0.9,
+      "auto_ok_share": 0.0,
+      "error_rate_among_auto_ok": null,
+      "wrong_but_accepted_share": 0.0,
+      "human_review_share": 1.0
+     },
+     {
+      "field_conf_min": 0.95,
+      "auto_ok_share": 0.0,
+      "error_rate_among_auto_ok": null,
+      "wrong_but_accepted_share": 0.0,
+      "human_review_share": 1.0
+     },
+     {
+      "field_conf_min": 0.98,
+      "auto_ok_share": 0.0,
+      "error_rate_among_auto_ok": null,
+      "wrong_but_accepted_share": 0.0,
+      "human_review_share": 1.0
+     },
+     {
+      "field_conf_min": 0.99,
+      "auto_ok_share": 0.0,
+      "error_rate_among_auto_ok": null,
+      "wrong_but_accepted_share": 0.0,
+      "human_review_share": 1.0
+     }
+    ],
+    "sheet_exact_top1": 0.0,
+    "sheet_exact_if_suggestions_accepted": 0.0,
+    "repair_suggestions": 0,
+    "repair_suggestions_fully_correct": 0
+   }
+  },
+  "Qwen3-VL-8B-Instruct-0shot-none-test": {
+   "dataset": "R-test",
+   "model": "Qwen/Qwen3-VL-8B-Instruct",
+   "prompt": null,
+   "n_shots": 0,
+   "exemplar_config": "none",
+   "reader": {
+    "n_sheets": 9,
+    "n_fields_scored": 243,
+    "n_fields_nonblank": 241,
+    "n_fields_illegible_excluded": 0,
+    "field_accuracy": {
+     "value": 0.4815,
+     "ci_low": 0.3415,
+     "ci_high": 0.6503
+    },
+    "nonblank_field_accuracy": {
+     "value": 0.4855,
+     "ci_low": 0.3415,
+     "ci_high": 0.6598
+    },
+    "blank_field_accuracy": {
+     "value": 0.0,
+     "ci_low": 0.0,
+     "ci_high": 0.0
+    },
+    "value_equivalent_field_accuracy": {
+     "value": 0.6379,
+     "ci_low": 0.4691,
+     "ci_high": 0.8107
+    },
+    "sheet_exact_match": {
+     "value": 0.0,
+     "ci_low": 0.0,
+     "ci_high": 0.0
+    },
+    "json_valid_rate": 1.0,
+    "seconds_median": 8.26,
+    "seconds_p95": 9.6,
+    "vram_peak_mb": 6776.0,
+    "input_tokens_median": 1185
+   },
+   "calibration": {
+    "temperature": 20.0,
+    "n_fields": 243,
+    "ece_before": 0.4341,
+    "ece_after": 0.0968
+   },
+   "system": {
+    "risk_coverage": [
+     {
+      "field_conf_min": 0.5,
+      "auto_ok_share": 0.0,
+      "error_rate_among_auto_ok": null,
+      "wrong_but_accepted_share": 0.0,
+      "human_review_share": 1.0
+     },
+     {
+      "field_conf_min": 0.6,
+      "auto_ok_share": 0.0,
+      "error_rate_among_auto_ok": null,
+      "wrong_but_accepted_share": 0.0,
+      "human_review_share": 1.0
+     },
+     {
+      "field_conf_min": 0.7,
+      "auto_ok_share": 0.0,
+      "error_rate_among_auto_ok": null,
+      "wrong_but_accepted_share": 0.0,
+      "human_review_share": 1.0
+     },
+     {
+      "field_conf_min": 0.8,
+      "auto_ok_share": 0.0,
+      "error_rate_among_auto_ok": null,
+      "wrong_but_accepted_share": 0.0,
+      "human_review_share": 1.0
+     },
+     {
+      "field_conf_min": 0.85,
+      "auto_ok_share": 0.0,
+      "error_rate_among_auto_ok": null,
+      "wrong_but_accepted_share": 0.0,
+      "human_review_share": 1.0
+     },
+     {
+      "field_conf_min": 0.9,
+      "auto_ok_share": 0.0,
+      "error_rate_among_auto_ok": null,
+      "wrong_but_accepted_share": 0.0,
+      "human_review_share": 1.0
+     },
+     {
+      "field_conf_min": 0.95,
+      "auto_ok_share": 0.0,
+      "error_rate_among_auto_ok": null,
+      "wrong_but_accepted_share": 0.0,
+      "human_review_share": 1.0
+     },
+     {
+      "field_conf_min": 0.98,
+      "auto_ok_share": 0.0,
+      "error_rate_among_auto_ok": null,
+      "wrong_but_accepted_share": 0.0,
+      "human_review_share": 1.0
+     },
+     {
+      "field_conf_min": 0.99,
+      "auto_ok_share": 0.0,
+      "error_rate_among_auto_ok": null,
+      "wrong_but_accepted_share": 0.0,
+      "human_review_share": 1.0
+     }
+    ],
+    "sheet_exact_top1": 0.0,
+    "sheet_exact_if_suggestions_accepted": 0.0,
+    "repair_suggestions": 0,
+    "repair_suggestions_fully_correct": 0
+   }
+  },
+  "Qwen3-VL-8B-Instruct-1shot-local-dev": {
+   "dataset": "R-dev",
+   "model": "Qwen/Qwen3-VL-8B-Instruct@0c351dd01ed87e9c1b53cbc748cba10e6187ff3b:nf4",
+   "prompt": "read_sheet_v1+1shot-none",
+   "n_shots": 1,
+   "exemplar_config": "local",
+   "reader": {
+    "n_sheets": 3,
+    "n_fields_scored": 81,
+    "n_fields_nonblank": 79,
+    "n_fields_illegible_excluded": 0,
+    "field_accuracy": {
+     "value": 0.3086,
+     "ci_low": 0.1111,
+     "ci_high": 0.5185
+    },
+    "nonblank_field_accuracy": {
+     "value": 0.3165,
+     "ci_low": 0.1154,
+     "ci_high": 0.5185
+    },
+    "blank_field_accuracy": {
+     "value": 0.0,
+     "ci_low": 0.0,
+     "ci_high": 0.0
+    },
+    "value_equivalent_field_accuracy": {
+     "value": 0.6543,
+     "ci_low": 0.5185,
+     "ci_high": 0.8148
+    },
+    "sheet_exact_match": {
+     "value": 0.0,
+     "ci_low": 0.0,
+     "ci_high": 0.0
+    },
+    "json_valid_rate": 1.0,
+    "seconds_median": 9.29,
+    "seconds_p95": 9.55,
+    "vram_peak_mb": 7329.0,
+    "input_tokens_median": 2980
+   },
+   "calibration": {
+    "temperature": 1.0,
+    "n_fields": 81,
+    "ece_before": 0.5935,
+    "ece_after": 0.5935
+   },
+   "system": {
+    "risk_coverage": [
+     {
+      "field_conf_min": 0.5,
+      "auto_ok_share": 0.0,
+      "error_rate_among_auto_ok": null,
+      "wrong_but_accepted_share": 0.0,
+      "human_review_share": 1.0
+     },
+     {
+      "field_conf_min": 0.6,
+      "auto_ok_share": 0.0,
+      "error_rate_among_auto_ok": null,
+      "wrong_but_accepted_share": 0.0,
+      "human_review_share": 1.0
+     },
+     {
+      "field_conf_min": 0.7,
+      "auto_ok_share": 0.0,
+      "error_rate_among_auto_ok": null,
+      "wrong_but_accepted_share": 0.0,
+      "human_review_share": 1.0
+     },
+     {
+      "field_conf_min": 0.8,
+      "auto_ok_share": 0.0,
+      "error_rate_among_auto_ok": null,
+      "wrong_but_accepted_share": 0.0,
+      "human_review_share": 1.0
+     },
+     {
+      "field_conf_min": 0.85,
+      "auto_ok_share": 0.0,
+      "error_rate_among_auto_ok": null,
+      "wrong_but_accepted_share": 0.0,
+      "human_review_share": 1.0
+     },
+     {
+      "field_conf_min": 0.9,
+      "auto_ok_share": 0.0,
+      "error_rate_among_auto_ok": null,
+      "wrong_but_accepted_share": 0.0,
+      "human_review_share": 1.0
+     },
+     {
+      "field_conf_min": 0.95,
+      "auto_ok_share": 0.0,
+      "error_rate_among_auto_ok": null,
+      "wrong_but_accepted_share": 0.0,
+      "human_review_share": 1.0
+     },
+     {
+      "field_conf_min": 0.98,
+      "auto_ok_share": 0.0,
+      "error_rate_among_auto_ok": null,
+      "wrong_but_accepted_share": 0.0,
+      "human_review_share": 1.0
+     },
+     {
+      "field_conf_min": 0.99,
+      "auto_ok_share": 0.0,
+      "error_rate_among_auto_ok": null,
+      "wrong_but_accepted_share": 0.0,
+      "human_review_share": 1.0
+     }
+    ],
+    "sheet_exact_top1": 0.0,
+    "sheet_exact_if_suggestions_accepted": 0.0,
+    "repair_suggestions": 1,
+    "repair_suggestions_fully_correct": 0
+   }
+  },
+  "Qwen3-VL-8B-Instruct-1shot-local-test": {
+   "dataset": "R-test",
+   "model": "Qwen/Qwen3-VL-8B-Instruct@0c351dd01ed87e9c1b53cbc748cba10e6187ff3b:nf4",
+   "prompt": "read_sheet_v1+1shot-none",
+   "n_shots": 1,
+   "exemplar_config": "local",
+   "reader": {
+    "n_sheets": 9,
+    "n_fields_scored": 243,
+    "n_fields_nonblank": 241,
+    "n_fields_illegible_excluded": 0,
+    "field_accuracy": {
+     "value": 0.679,
+     "ci_low": 0.5597,
+     "ci_high": 0.786
+    },
+    "nonblank_field_accuracy": {
+     "value": 0.6805,
+     "ci_low": 0.5579,
+     "ci_high": 0.7917
+    },
+    "blank_field_accuracy": {
+     "value": 0.5,
+     "ci_low": 0.0,
+     "ci_high": 1.0
+    },
+    "value_equivalent_field_accuracy": {
+     "value": 0.7572,
+     "ci_low": 0.6626,
+     "ci_high": 0.8436
+    },
+    "sheet_exact_match": {
+     "value": 0.0,
+     "ci_low": 0.0,
+     "ci_high": 0.0
+    },
+    "json_valid_rate": 1.0,
+    "seconds_median": 8.99,
+    "seconds_p95": 9.84,
+    "vram_peak_mb": 7318.0,
+    "input_tokens_median": 2980
+   },
+   "calibration": {
+    "temperature": 1.0,
+    "n_fields": 243,
+    "ece_before": 0.2579,
+    "ece_after": 0.2579
+   },
+   "system": {
+    "risk_coverage": [
+     {
+      "field_conf_min": 0.5,
+      "auto_ok_share": 0.0,
+      "error_rate_among_auto_ok": null,
+      "wrong_but_accepted_share": 0.0,
+      "human_review_share": 1.0
+     },
+     {
+      "field_conf_min": 0.6,
+      "auto_ok_share": 0.0,
+      "error_rate_among_auto_ok": null,
+      "wrong_but_accepted_share": 0.0,
+      "human_review_share": 1.0
+     },
+     {
+      "field_conf_min": 0.7,
+      "auto_ok_share": 0.0,
+      "error_rate_among_auto_ok": null,
+      "wrong_but_accepted_share": 0.0,
+      "human_review_share": 1.0
+     },
+     {
+      "field_conf_min": 0.8,
+      "auto_ok_share": 0.0,
+      "error_rate_among_auto_ok": null,
+      "wrong_but_accepted_share": 0.0,
+      "human_review_share": 1.0
+     },
+     {
+      "field_conf_min": 0.85,
+      "auto_ok_share": 0.0,
+      "error_rate_among_auto_ok": null,
+      "wrong_but_accepted_share": 0.0,
+      "human_review_share": 1.0
+     },
+     {
+      "field_conf_min": 0.9,
+      "auto_ok_share": 0.0,
+      "error_rate_among_auto_ok": null,
+      "wrong_but_accepted_share": 0.0,
+      "human_review_share": 1.0
+     },
+     {
+      "field_conf_min": 0.95,
+      "auto_ok_share": 0.0,
+      "error_rate_among_auto_ok": null,
+      "wrong_but_accepted_share": 0.0,
+      "human_review_share": 1.0
+     },
+     {
+      "field_conf_min": 0.98,
+      "auto_ok_share": 0.0,
+      "error_rate_among_auto_ok": null,
+      "wrong_but_accepted_share": 0.0,
+      "human_review_share": 1.0
+     },
+     {
+      "field_conf_min": 0.99,
+      "auto_ok_share": 0.0,
+      "error_rate_among_auto_ok": null,
+      "wrong_but_accepted_share": 0.0,
+      "human_review_share": 1.0
+     }
+    ],
+    "sheet_exact_top1": 0.0,
+    "sheet_exact_if_suggestions_accepted": 0.0,
+    "repair_suggestions": 2,
+    "repair_suggestions_fully_correct": 0
+   }
+  },
+  "Qwen3-VL-8B-Instruct-2shot-local-dev": {
+   "dataset": "R-dev",
+   "model": "Qwen/Qwen3-VL-8B-Instruct@0c351dd01ed87e9c1b53cbc748cba10e6187ff3b:nf4",
+   "prompt": "read_sheet_v1+2shot-none",
+   "n_shots": 2,
+   "exemplar_config": "local",
+   "reader": {
+    "n_sheets": 2,
+    "n_fields_scored": 54,
+    "n_fields_nonblank": 52,
+    "n_fields_illegible_excluded": 0,
+    "field_accuracy": {
+     "value": 0.463,
+     "ci_low": 0.1111,
+     "ci_high": 0.8148
+    },
+    "nonblank_field_accuracy": {
+     "value": 0.4808,
+     "ci_low": 0.1154,
+     "ci_high": 0.8462
+    },
+    "blank_field_accuracy": {
+     "value": 0.0,
+     "ci_low": 0.0,
+     "ci_high": 0.0
+    },
+    "value_equivalent_field_accuracy": {
+     "value": 0.7222,
+     "ci_low": 0.6296,
+     "ci_high": 0.8148
+    },
+    "sheet_exact_match": {
+     "value": 0.0,
+     "ci_low": 0.0,
+     "ci_high": 0.0
+    },
+    "json_valid_rate": 1.0,
+    "seconds_median": 10.19,
+    "seconds_p95": 10.39,
+    "vram_peak_mb": 7633.0,
+    "input_tokens_median": 4773.0
+   },
+   "calibration": {
+    "temperature": 1.0,
+    "n_fields": 54,
+    "ece_before": 0.4751,
+    "ece_after": 0.4751
+   },
+   "system": {
+    "risk_coverage": [
+     {
+      "field_conf_min": 0.5,
+      "auto_ok_share": 0.0,
+      "error_rate_among_auto_ok": null,
+      "wrong_but_accepted_share": 0.0,
+      "human_review_share": 1.0
+     },
+     {
+      "field_conf_min": 0.6,
+      "auto_ok_share": 0.0,
+      "error_rate_among_auto_ok": null,
+      "wrong_but_accepted_share": 0.0,
+      "human_review_share": 1.0
+     },
+     {
+      "field_conf_min": 0.7,
+      "auto_ok_share": 0.0,
+      "error_rate_among_auto_ok": null,
+      "wrong_but_accepted_share": 0.0,
+      "human_review_share": 1.0
+     },
+     {
+      "field_conf_min": 0.8,
+      "auto_ok_share": 0.0,
+      "error_rate_among_auto_ok": null,
+      "wrong_but_accepted_share": 0.0,
+      "human_review_share": 1.0
+     },
+     {
+      "field_conf_min": 0.85,
+      "auto_ok_share": 0.0,
+      "error_rate_among_auto_ok": null,
+      "wrong_but_accepted_share": 0.0,
+      "human_review_share": 1.0
+     },
+     {
+      "field_conf_min": 0.9,
+      "auto_ok_share": 0.0,
+      "error_rate_among_auto_ok": null,
+      "wrong_but_accepted_share": 0.0,
+      "human_review_share": 1.0
+     },
+     {
+      "field_conf_min": 0.95,
+      "auto_ok_share": 0.0,
+      "error_rate_among_auto_ok": null,
+      "wrong_but_accepted_share": 0.0,
+      "human_review_share": 1.0
+     },
+     {
+      "field_conf_min": 0.98,
+      "auto_ok_share": 0.0,
+      "error_rate_among_auto_ok": null,
+      "wrong_but_accepted_share": 0.0,
+      "human_review_share": 1.0
+     },
+     {
+      "field_conf_min": 0.99,
+      "auto_ok_share": 0.0,
+      "error_rate_among_auto_ok": null,
+      "wrong_but_accepted_share": 0.0,
+      "human_review_share": 1.0
+     }
+    ],
+    "sheet_exact_top1": 0.0,
+    "sheet_exact_if_suggestions_accepted": 0.0,
+    "repair_suggestions": 0,
+    "repair_suggestions_fully_correct": 0
+   }
+  },
+  "Qwen3-VL-8B-Instruct-2shot-local-test": {
+   "dataset": "R-test",
+   "model": "Qwen/Qwen3-VL-8B-Instruct@0c351dd01ed87e9c1b53cbc748cba10e6187ff3b:nf4",
+   "prompt": "read_sheet_v1+2shot-none",
+   "n_shots": 2,
+   "exemplar_config": "local",
+   "reader": {
+    "n_sheets": 9,
+    "n_fields_scored": 243,
+    "n_fields_nonblank": 241,
+    "n_fields_illegible_excluded": 0,
+    "field_accuracy": {
+     "value": 0.6996,
+     "ci_low": 0.5843,
+     "ci_high": 0.8066
+    },
+    "nonblank_field_accuracy": {
+     "value": 0.7012,
+     "ci_low": 0.5843,
+     "ci_high": 0.8091
+    },
+    "blank_field_accuracy": {
+     "value": 0.5,
+     "ci_low": 0.0,
+     "ci_high": 1.0
+    },
+    "value_equivalent_field_accuracy": {
+     "value": 0.7613,
+     "ci_low": 0.6914,
+     "ci_high": 0.8313
+    },
+    "sheet_exact_match": {
+     "value": 0.0,
+     "ci_low": 0.0,
+     "ci_high": 0.0
+    },
+    "json_valid_rate": 1.0,
+    "seconds_median": 10.16,
+    "seconds_p95": 10.89,
+    "vram_peak_mb": 7901.0,
+    "input_tokens_median": 4816
+   },
+   "calibration": {
+    "temperature": 1.0,
+    "n_fields": 243,
+    "ece_before": 0.2312,
+    "ece_after": 0.2312
+   },
+   "system": {
+    "risk_coverage": [
+     {
+      "field_conf_min": 0.5,
+      "auto_ok_share": 0.0,
+      "error_rate_among_auto_ok": null,
+      "wrong_but_accepted_share": 0.0,
+      "human_review_share": 1.0
+     },
+     {
+      "field_conf_min": 0.6,
+      "auto_ok_share": 0.0,
+      "error_rate_among_auto_ok": null,
+      "wrong_but_accepted_share": 0.0,
+      "human_review_share": 1.0
+     },
+     {
+      "field_conf_min": 0.7,
+      "auto_ok_share": 0.0,
+      "error_rate_among_auto_ok": null,
+      "wrong_but_accepted_share": 0.0,
+      "human_review_share": 1.0
+     },
+     {
+      "field_conf_min": 0.8,
+      "auto_ok_share": 0.0,
+      "error_rate_among_auto_ok": null,
+      "wrong_but_accepted_share": 0.0,
+      "human_review_share": 1.0
+     },
+     {
+      "field_conf_min": 0.85,
+      "auto_ok_share": 0.0,
+      "error_rate_among_auto_ok": null,
+      "wrong_but_accepted_share": 0.0,
+      "human_review_share": 1.0
+     },
+     {
+      "field_conf_min": 0.9,
+      "auto_ok_share": 0.0,
+      "error_rate_among_auto_ok": null,
+      "wrong_but_accepted_share": 0.0,
+      "human_review_share": 1.0
+     },
+     {
+      "field_conf_min": 0.95,
+      "auto_ok_share": 0.0,
+      "error_rate_among_auto_ok": null,
+      "wrong_but_accepted_share": 0.0,
+      "human_review_share": 1.0
+     },
+     {
+      "field_conf_min": 0.98,
+      "auto_ok_share": 0.0,
+      "error_rate_among_auto_ok": null,
+      "wrong_but_accepted_share": 0.0,
+      "human_review_share": 1.0
+     },
+     {
+      "field_conf_min": 0.99,
+      "auto_ok_share": 0.0,
+      "error_rate_among_auto_ok": null,
+      "wrong_but_accepted_share": 0.0,
+      "human_review_share": 1.0
+     }
+    ],
+    "sheet_exact_top1": 0.0,
+    "sheet_exact_if_suggestions_accepted": 0.0,
+    "repair_suggestions": 1,
+    "repair_suggestions_fully_correct": 0
+   }
+  },
+  "Qwen3.5-9B-0shot-none-dev": {
+   "dataset": "R-dev",
+   "model": "Qwen/Qwen3.5-9B@c202236235762e1c871ad0ccb60c8ee5ba337b9a:nf4",
+   "prompt": "read_sheet_v1+0shot-none",
+   "n_shots": 0,
+   "exemplar_config": "none",
+   "reader": {
+    "n_sheets": 4,
+    "n_fields_scored": 108,
+    "n_fields_nonblank": 105,
+    "n_fields_illegible_excluded": 0,
+    "field_accuracy": {
+     "value": 0.463,
+     "ci_low": 0.2407,
+     "ci_high": 0.6852
+    },
+    "nonblank_field_accuracy": {
+     "value": 0.4762,
+     "ci_low": 0.25,
+     "ci_high": 0.6981
+    },
+    "blank_field_accuracy": {
+     "value": 0.0,
+     "ci_low": 0.0,
+     "ci_high": 0.0
+    },
+    "value_equivalent_field_accuracy": {
+     "value": 0.7407,
+     "ci_low": 0.6389,
+     "ci_high": 0.8241
+    },
+    "sheet_exact_match": {
+     "value": 0.0,
+     "ci_low": 0.0,
+     "ci_high": 0.0
+    },
+    "json_valid_rate": 1.0,
+    "seconds_median": 10.27,
+    "seconds_p95": 11.6,
+    "vram_peak_mb": 8207.0,
+    "input_tokens_median": 1603.0
+   },
+   "calibration": {
+    "temperature": 1.0,
+    "n_fields": 108,
+    "ece_before": 0.3635,
+    "ece_after": 0.3635
+   },
+   "system": {
+    "risk_coverage": [
+     {
+      "field_conf_min": 0.5,
+      "auto_ok_share": 0.0,
+      "error_rate_among_auto_ok": null,
+      "wrong_but_accepted_share": 0.0,
+      "human_review_share": 1.0
+     },
+     {
+      "field_conf_min": 0.6,
+      "auto_ok_share": 0.0,
+      "error_rate_among_auto_ok": null,
+      "wrong_but_accepted_share": 0.0,
+      "human_review_share": 1.0
+     },
+     {
+      "field_conf_min": 0.7,
+      "auto_ok_share": 0.0,
+      "error_rate_among_auto_ok": null,
+      "wrong_but_accepted_share": 0.0,
+      "human_review_share": 1.0
+     },
+     {
+      "field_conf_min": 0.8,
+      "auto_ok_share": 0.0,
+      "error_rate_among_auto_ok": null,
+      "wrong_but_accepted_share": 0.0,
+      "human_review_share": 1.0
+     },
+     {
+      "field_conf_min": 0.85,
+      "auto_ok_share": 0.0,
+      "error_rate_among_auto_ok": null,
+      "wrong_but_accepted_share": 0.0,
+      "human_review_share": 1.0
+     },
+     {
+      "field_conf_min": 0.9,
+      "auto_ok_share": 0.0,
+      "error_rate_among_auto_ok": null,
+      "wrong_but_accepted_share": 0.0,
+      "human_review_share": 1.0
+     },
+     {
+      "field_conf_min": 0.95,
+      "auto_ok_share": 0.0,
+      "error_rate_among_auto_ok": null,
+      "wrong_but_accepted_share": 0.0,
+      "human_review_share": 1.0
+     },
+     {
+      "field_conf_min": 0.98,
+      "auto_ok_share": 0.0,
+      "error_rate_among_auto_ok": null,
+      "wrong_but_accepted_share": 0.0,
+      "human_review_share": 1.0
+     },
+     {
+      "field_conf_min": 0.99,
+      "auto_ok_share": 0.0,
+      "error_rate_among_auto_ok": null,
+      "wrong_but_accepted_share": 0.0,
+      "human_review_share": 1.0
+     }
+    ],
+    "sheet_exact_top1": 0.0,
+    "sheet_exact_if_suggestions_accepted": 0.0,
+    "repair_suggestions": 0,
+    "repair_suggestions_fully_correct": 0
+   }
+  },
+  "Qwen3.5-9B-0shot-none-test": {
+   "dataset": "R-test",
+   "model": "Qwen/Qwen3.5-9B@c202236235762e1c871ad0ccb60c8ee5ba337b9a:nf4",
+   "prompt": "read_sheet_v1+0shot-none",
+   "n_shots": 0,
+   "exemplar_config": "none",
+   "reader": {
+    "n_sheets": 9,
+    "n_fields_scored": 243,
+    "n_fields_nonblank": 241,
+    "n_fields_illegible_excluded": 0,
+    "field_accuracy": {
+     "value": 0.5967,
+     "ci_low": 0.4691,
+     "ci_high": 0.749
+    },
+    "nonblank_field_accuracy": {
+     "value": 0.6017,
+     "ci_low": 0.471,
+     "ci_high": 0.7605
+    },
+    "blank_field_accuracy": {
+     "value": 0.0,
+     "ci_low": 0.0,
+     "ci_high": 0.0
+    },
+    "value_equivalent_field_accuracy": {
+     "value": 0.8272,
+     "ci_low": 0.7448,
+     "ci_high": 0.9053
+    },
+    "sheet_exact_match": {
+     "value": 0.0,
+     "ci_low": 0.0,
+     "ci_high": 0.0
+    },
+    "json_valid_rate": 1.0,
+    "seconds_median": 10.02,
+    "seconds_p95": 10.89,
+    "vram_peak_mb": 8202.0,
+    "input_tokens_median": 1205
+   },
+   "calibration": {
+    "temperature": 1.0,
+    "n_fields": 243,
+    "ece_before": 0.2795,
+    "ece_after": 0.2795
+   },
+   "system": {
+    "risk_coverage": [
+     {
+      "field_conf_min": 0.5,
+      "auto_ok_share": 0.1111,
+      "error_rate_among_auto_ok": 1.0,
+      "wrong_but_accepted_share": 0.1111,
+      "human_review_share": 0.8889
+     },
+     {
+      "field_conf_min": 0.6,
+      "auto_ok_share": 0.0,
+      "error_rate_among_auto_ok": null,
+      "wrong_but_accepted_share": 0.0,
+      "human_review_share": 1.0
+     },
+     {
+      "field_conf_min": 0.7,
+      "auto_ok_share": 0.0,
+      "error_rate_among_auto_ok": null,
+      "wrong_but_accepted_share": 0.0,
+      "human_review_share": 1.0
+     },
+     {
+      "field_conf_min": 0.8,
+      "auto_ok_share": 0.0,
+      "error_rate_among_auto_ok": null,
+      "wrong_but_accepted_share": 0.0,
+      "human_review_share": 1.0
+     },
+     {
+      "field_conf_min": 0.85,
+      "auto_ok_share": 0.0,
+      "error_rate_among_auto_ok": null,
+      "wrong_but_accepted_share": 0.0,
+      "human_review_share": 1.0
+     },
+     {
+      "field_conf_min": 0.9,
+      "auto_ok_share": 0.0,
+      "error_rate_among_auto_ok": null,
+      "wrong_but_accepted_share": 0.0,
+      "human_review_share": 1.0
+     },
+     {
+      "field_conf_min": 0.95,
+      "auto_ok_share": 0.0,
+      "error_rate_among_auto_ok": null,
+      "wrong_but_accepted_share": 0.0,
+      "human_review_share": 1.0
+     },
+     {
+      "field_conf_min": 0.98,
+      "auto_ok_share": 0.0,
+      "error_rate_among_auto_ok": null,
+      "wrong_but_accepted_share": 0.0,
+      "human_review_share": 1.0
+     },
+     {
+      "field_conf_min": 0.99,
+      "auto_ok_share": 0.0,
+      "error_rate_among_auto_ok": null,
+      "wrong_but_accepted_share": 0.0,
+      "human_review_share": 1.0
+     }
+    ],
+    "sheet_exact_top1": 0.0,
+    "sheet_exact_if_suggestions_accepted": 0.0,
+    "repair_suggestions": 0,
+    "repair_suggestions_fully_correct": 0
+   }
+  }
+ },
+ "labels": {
+  "n_labelled": 13,
+  "n_reconciled": 0
+ }
+}

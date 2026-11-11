@@ -65,6 +65,16 @@ Every decision taken without explicit instruction, with its reason. Matthias can
 | D31 | The sheet page checks the rules live against the current values (model reading or reviewer values); `validation_result` keeps the pipeline's original check. | After a review, the page must show whether the corrected figures add up. |
 | D32 | Every verification (including a confirmation) gets a random 5-digit case reference, stored on the verification row. | USSD shows a reference after both "yes" and "no", and a repeat attempt can quote it. |
 
+## M1 evaluation decisions (11 Nov 2026)
+
+| id | decision | reason |
+|---|---|---|
+| D43 | **Shipped reader: Qwen/Qwen3-VL-8B-Instruct, revision `0c351dd01ed87e9c1b53cbc748cba10e6187ff3b` (Apache-2.0), 4-bit NF4, zero-shot, prompt `read_sheet_v1`.** Chosen on R-dev only (field accuracy 0.481 vs Qwen3.5-9B 0.463 and few-shot 0.309/0.463 on 3/2 sheets), then speed. Split frozen on 13 labelled sheets: R-dev R001, R005, R006, R010; R-test the other 9. Few-shot examples R001, R010 (R-dev, both pass every hard rule). | Spec 4.2/4.3: choose on R-dev only. With 4 dev sheets the choice is fragile; Qwen3.5-9B and 2-shot scored higher on R-test, which is reported but not used. |
+| D44 | **M1 stop rule triggered:** non-blank field accuracy on R-dev is 49.5% (< 80%). Reported to Matthias on 11 Nov; the rest of the system was already built and makes every uncertain sheet go to a person. | Spec 11, M1. |
+| D45 | Temperature scaling hit the search bound (T = 20) on R-dev: the raw model is strongly overconfident. ECE 0.41 → 0.12 (R-dev), 0.43 → 0.10 (R-test). At `field_conf_min` 0.90 no sheet is auto-accepted. | Reported as found; the bound could be widened, but with 108 dev fields a more extreme T would overfit. |
+| D46 | A second accuracy score counts a **blank cell and a written 0 as equal** (both are 0 in every sum). | Labels and model often differ only on this convention; the score shows how much of the error it explains. |
+| D47 | `scripts/evaluate_system.py` covers the label-free evaluations (simulated defect detection over 3,500 records, Sybil simulation with the real status rules, USSD screen walk, map size); `scripts/check_labels.py` writes the private rule check (`data_real/rule_check_private.txt`). | Spec 10.6 (simulated part), 10.8–10.10, 10.12; 3.2. |
+
 ## Labelling conventions
 
 | id | decision | reason |

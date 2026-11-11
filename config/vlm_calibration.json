@@ -1,0 +1,9 @@
+{
+ "Qwen/Qwen3-VL-8B-Instruct@0c351dd01ed87e9c1b53cbc748cba10e6187ff3b:nf4|read_sheet_v1+0shot-none": {
+  "temperature": 20.0,
+  "fitted_on": "R-dev run Qwen3-VL-8B-Instruct-0shot-none-dev",
+  "n_fields": 108,
+  "ece_before": 0.4135,
+  "ece_after": 0.1232
+ }
+}

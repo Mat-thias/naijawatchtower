@@ -32,8 +32,7 @@ SWEEP = [0.5, 0.6, 0.7, 0.8, 0.85, 0.9, 0.95, 0.98, 0.99]
 CAVEATS = """> **Read these caveats before any number below.**
 > - The real sample is small (n is stated beside every figure), so confidence intervals are wide and the
 >   figures do not generalise to all sheets, states or elections.
-> - Labels were typed from the sheet by one person (Matthias), then reconciled: every field where the model
->   (Qwen3-VL-8B, zero-shot) read a different value was re-checked against the image.
+> - Labels were typed from the sheet by one person (Matthias). {reconciliation}
 > - Most portal images are 1024-pixel-wide thumbnails; full-size images may read differently.
 > - Discrepancy detection is measured on number-level injections and simulated records, not on physically
 >   altered sheets, and arithmetic checks cannot catch a forgery that keeps all totals consistent.
@@ -127,7 +126,9 @@ def cmd_calibrate(args) -> None:
 def cmd_report(args) -> None:
     from naijawatchtower.eval.calibration import load_temperature
     store = LabelStore.load(DATA_REAL)
-    metrics: dict = {"generated": datetime.now(timezone.utc).isoformat(timespec="seconds"), "runs": {}}
+    metrics: dict = {"generated": datetime.now(timezone.utc).isoformat(timespec="seconds"), "runs": {},
+                     "labels": {"n_labelled": len(store.labels),
+                                "n_reconciled": sum(1 for s in store.labels if store.sheets[s].get("reconciled_at"))}}
     for run_dir in sorted(p for p in RUNS.iterdir() if (p / "meta.json").exists() and p.name != "smoke"):
         meta, evals = evals_for(run_dir.name, store)
         if not evals:
@@ -142,7 +143,9 @@ def cmd_report(args) -> None:
             "system": system_metrics(evals, t, SWEEP)}
     RESULTS.mkdir(exist_ok=True)
     (RESULTS / "metrics.json").write_text(json.dumps(metrics, indent=1))
-    (RESULTS / "REPORT.md").write_text(render_report(metrics))
+    system_path = RESULTS / "system_metrics.json"
+    system = json.loads(system_path.read_text()) if system_path.exists() else None
+    (RESULTS / "REPORT.md").write_text(render_report(metrics) + (render_system(system) if system else ""))
     print(f"wrote {RESULTS / 'metrics.json'} and {RESULTS / 'REPORT.md'} ({len(metrics['runs'])} runs)")
 
 
@@ -150,20 +153,52 @@ def fmt(m: dict) -> str:
     return f"{m['value']:.3f} [{m['ci_low']:.3f}, {m['ci_high']:.3f}]"
 
 
+def reconciliation_text(labels: dict) -> str:
+    n, r = labels["n_labelled"], labels["n_reconciled"]
+    if r == n:
+        return ("Every field where the model (Qwen3-VL-8B, zero-shot) read a different value was then re-checked\n"
+                ">   against the image.")
+    return (f"**{n - r} of {n} sheets have not yet been reconciled** against the model's readings, so the labels may\n"
+            ">   still contain typing errors, and for some sheets whether an unlisted party row is empty or a written 0\n"
+            ">   is still being checked (see the blank = 0 column).")
+
+
+def selection_text(metrics: dict) -> str:
+    dev = {k: v for k, v in metrics["runs"].items() if v["dataset"] == "R-dev"}
+    if not dev:
+        return ""
+    best = max(dev, key=lambda k: dev[k]["reader"]["field_accuracy"]["value"])
+    nb = dev[best]["reader"]["nonblank_field_accuracy"]["value"]
+    return ("## Model and prompt selection\n\n"
+            f"Chosen on R-dev only (field accuracy, then speed): **{best.removesuffix('-dev')}**. R-test was not used "
+            f"for any choice. R-dev holds only {dev[best]['reader']['n_sheets']} sheets (fewer for few-shot runs, whose "
+            "exemplars are excluded), so this choice is fragile; other configurations scored higher on R-test, which "
+            "is reported but must not drive the choice.\n\n"
+            f"**M1 threshold not met:** non-blank field accuracy on R-dev is {nb:.1%} against a target of 80%. The "
+            "reader is not good enough to run unattended; the system therefore sends every uncertain or "
+            "rule-breaking sheet to a person (see risk-coverage below: at the default threshold no sheet is "
+            "auto-accepted).\n\n")
+
+
 def render_report(metrics: dict) -> str:
-    lines = ["# NaijaWatchTower evaluation report", "", CAVEATS,
+    lines = ["# NaijaWatchTower evaluation report", "",
+             CAVEATS.replace("{reconciliation}", reconciliation_text(metrics["labels"])),
+             selection_text(metrics),
              f"Generated {metrics['generated']}. All figures are aggregates over real sheets labelled by hand; "
              "no per-sheet results are published. 95% bootstrap intervals over sheets in brackets.", "",
              "## Reader comparison", "",
-             "| run | dataset | n sheets | n fields | field acc. | non-blank field acc. | sheet exact | "
-             "JSON valid | s/sheet (median, p95) | peak VRAM MB |",
-             "|---|---|---|---|---|---|---|---|---|---|"]
+             "| run | dataset | n sheets | n fields | field acc. | non-blank field acc. | field acc., blank = 0 | "
+             "sheet exact | JSON valid | s/sheet (median, p95) | peak VRAM MB |",
+             "|---|---|---|---|---|---|---|---|---|---|---|"]
     for name, r in metrics["runs"].items():
         m = r["reader"]
         lines.append(f"| {name} | {r['dataset']} | {m['n_sheets']} | {m['n_fields_scored']} | "
                      f"{fmt(m['field_accuracy'])} | {fmt(m['nonblank_field_accuracy'])} "
-                     f"(n={m['n_fields_nonblank']}) | {fmt(m['sheet_exact_match'])} | {m['json_valid_rate']} | "
+                     f"(n={m['n_fields_nonblank']}) | {fmt(m['value_equivalent_field_accuracy'])} | "
+                     f"{fmt(m['sheet_exact_match'])} | {m['json_valid_rate']} | "
                      f"{m['seconds_median']}, {m['seconds_p95']} | {m['vram_peak_mb']} |")
+    lines += ["", "*Field acc., blank = 0* counts an empty cell and a written 0 as the same value, since both "
+              "count as 0 in every sum; it shows how much of the error is the blank-versus-zero convention."]
     lines += ["", "## Calibration (temperature scaling, fitted on R-dev)", "",
               "| run | dataset | n fields | T | ECE before | ECE after |", "|---|---|---|---|---|---|"]
     for name, r in metrics["runs"].items():
@@ -187,6 +222,60 @@ def render_report(metrics: dict) -> str:
             lines.append(f"| {row['field_conf_min']} | {row['auto_ok_share']} | {row['error_rate_among_auto_ok']} | "
                          f"{row['wrong_but_accepted_share']} | {row['human_review_share']} |")
         lines.append("")
+    return "\n".join(lines) + "\n"
+
+
+def render_system(s: dict) -> str:
+    """Report sections from scripts/evaluate_system.py (no real labels needed)."""
+    d = s["discrepancy_detection_simulated"]
+    lines = ["## Discrepancy detection on injected defects (simulated records)", "",
+             f"Dataset: {d['dataset']}, n = {d['n_records']} records ({d['n_records'] // 7} per type). "
+             "Defects are injected into the numbers, never into images.", "",
+             "| defect | n | failed a hard rule | discrepancy opened (no consistent reading) | sent to human review |",
+             "|---|---|---|---|---|"]
+    for defect, r in d["per_defect"].items():
+        lines.append(f"| {defect} | {r['n']} | {r['flagged_by_rules']:.1%} | {r['discrepancy_opened']:.1%} | "
+                     f"{r['sent_to_human_review']:.1%} |")
+    lines += ["", f"Precision of the rule flag (planted arithmetic defects vs all flagged, illegible readings counted "
+              f"as false flags): {d['rule_flag_precision']:.1%}.",
+              "**Limits:** number-level injection does not test whether the reader sees a physically altered digit; "
+              "a forgery that keeps every total consistent is not caught by arithmetic. Where a tampered digit opens "
+              "no discrepancy, the decoder found a plausible alternative reading and offers it only as a suggestion; "
+              "the sheet still goes to a person.", "",
+              "## Verification simulation (simulated unit, real status rules)", "",
+              "| scenario | without an observer | with one honest observer |", "|---|---|---|"]
+    sy = s["sybil_simulation"]
+    for key, label in [("attackers_to_mark_correct_sheet_disputed", "attackers needed to mark a correct sheet disputed"),
+                       ("attackers_to_verify_wrong_sheet", "attackers needed to verify a wrong sheet"),
+                       ("final_status_wrong_sheet_after_10_attackers", "status of the wrong sheet after 10 attackers"),
+                       ("burst_flag_raised_within_10_attackers", "burst flag raised")]:
+        lines.append(f"| {label} | {sy['without_observer'][key]} | {sy['with_observer'][key]} |")
+    u, g = s["ussd"], s["geo"]
+    lines += ["", sy["note"], "", "## USSD", "",
+              f"- Check my unit: **{u['inputs_check']} input** (target ≤ 3). Verify and confirm: "
+              f"**{u['inputs_verify_yes']} inputs** on a sheet with {u['verify_lines_on_example_sheet']} lines "
+              f"(target ≤ 8).",
+              f"- {u['screens_walked']} reachable screens walked in English and Pidgin: "
+              f"{u['share_screens_within_160']:.0%} within 160 characters (longest {u['max_screen_chars']}).",
+              "- Limits: no images over USSD (figures only), session timeouts, a cost per session, and a telecom "
+              "aggregator, shortcode and regulatory approval are needed; none is connected in the PoC.", "",
+              "| channel | read figures | confirm / dispute | see the image | needs data / smartphone |",
+              "|---|---|---|---|---|",
+              "| Web | yes | yes, with per-field corrections | yes (redacted) | yes |",
+              "| USSD | yes (≤ 160 chars per screen) | yes, one correction per report | no | no |",
+              "| SMS (stub, nothing sent) | no figures, only \"your unit's result is ready\" | no | no | no |", "",
+              "## Geographic view", "",
+              f"National SVG: {g.get('regions')} regions, {g.get('svg_bytes', 0) / 1000:.0f} KB "
+              f"({g.get('svg_gzip_bytes', 0) / 1000:.0f} KB gzipped; budget 300 KB), median render "
+              f"{g.get('render_ms_median')} ms. Layer values are checked against hand-computed fixtures in the "
+              "test suite.", "",
+              "## Trust indicators and a pilot design", "",
+              "The PoC measures nothing about trust or turnout. It builds the features a pilot would test: the "
+              "per-sheet journey timeline, report references with public status and reason codes, and the "
+              "explainer. A real pilot would need an independent evaluator, informed consent, comparison wards "
+              "without the tool, and pre-registered indicators: share of reports answered, median time to "
+              "resolution, verification coverage by ward, and an optional anonymous before/after confidence "
+              "question (shown only where at least 20 responses exist). It must never target or nudge anyone to vote.", ""]
     return "\n".join(lines) + "\n"
 
 

@@ -1,6 +1,6 @@
 # VLM reader (CLAUDE.md 4.2). Local GPU only; no hosted APIs.
-model_id: Qwen/Qwen3.5-9B          # chosen by zero-shot accuracy on R-dev, then speed (see ASSUMPTIONS)
-revision: null                     # pinned to a commit after the model is chosen
+model_id: Qwen/Qwen3-VL-8B-Instruct   # chosen on R-dev, zero-shot (D43); Apache-2.0
+revision: 0c351dd01ed87e9c1b53cbc748cba10e6187ff3b
 quantization: nf4                  # nf4 | int8 | bf16
 keep_full_precision: [visual, lm_head]   # vision tower and output layer stay in bf16
 max_pixels: 1600000                # per image; highest value that fits 12 GB with n_shots exemplars
