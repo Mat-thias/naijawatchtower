@@ -35,7 +35,7 @@ flowchart LR
 | `naijawatchtower/ocr/` | `SheetReader` interface; `VLMReader` (local GPU), `CacheReader` (replays stored readings by image hash), `FakeReader` (tests). `grammar.py` forces the JSON skeleton token by token so the model can emit only digits, `null` and field names; it also turns the per-step token probabilities into per-field confidence and up to six alternative readings. |
 | `naijawatchtower/validate/` | `rules.py` (R1–R7 from `config/rules.yaml`), `decoding.py` (best-first search for the most probable joint reading that satisfies the hard rules, at most 3 fields changed, 50,000-node cap; a suggestion only), `routing.py` (AUTO_OK only when every calibrated confidence ≥ threshold, nothing unclear, and all hard rules pass). |
 | `naijawatchtower/api/` | FastAPI app, SQLite via SQLAlchemy, single GPU worker thread, pipeline, verification/review/case services, audit chain, USSD state machine, translations. |
-| `naijawatchtower/web/` | Jinja2 pages, vendored HTMX, server-rendered SVG map (geoBoundaries ADM1, CC BY 4.0). |
+| `naijawatchtower/web/` | Jinja2 pages, vendored HTMX, server-rendered SVG map (geoBoundaries ADM1, CC BY 4.0). `explain.py` writes each arithmetic rule as an equation with the sheet's own figures and builds the journey stepper from the audit log. |
 | `naijawatchtower/sim/` | Simulated records (numbers only, fictional parties) that fill states without real sheets. |
 | `naijawatchtower/redact/` | Redacted display copies of real sheets (solid boxes, banner strip, metadata stripped). |
 | `naijawatchtower/eval/` | Labelling tools, splits, metrics with bootstrap intervals, calibration. |

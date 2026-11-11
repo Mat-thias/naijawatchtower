@@ -33,7 +33,7 @@ All screenshots come from the demo (simulated records, fictional parties A–R).
 
 **3. Every sheet shows its figures, confidence, journey and arithmetic checks.** Each check is written out as an equation with the sheet's own figures (here item 7 says 726 but the party rows add up to 716). When the figures do not add up, the system searches for the most probable reading that would, and offers it to a reviewer as a *possible alternative reading*. It is never applied automatically.
 
-![Sheet page: a failed rule in plain language and a suggested alternative reading](docs/img/02-sheet-suggestion.png)
+![Sheet page: the journey stepper, item-numbered figures with confidence, and the arithmetic checks written as equations, the failed one first](docs/img/02-sheet-suggestion.png)
 
 **4. People at the polling unit confirm or dispute** what was recorded, and can propose a corrected figure. Only counts are shown, never identities, and every report gets a reference number to track.
 
@@ -119,7 +119,8 @@ Full tables with 95% bootstrap intervals: [`results/REPORT.md`](results/REPORT.m
 
 ## Trust and participation
 
-- **Result journey** on every sheet: uploaded → read → checked → reviewed → verified, with timestamps from the audit log.
+- **Result journey** at the top of every sheet: uploaded → read → arithmetic checked → human review → people at the unit (→ discrepancy, if any), with each step marked done, waiting, flagged or not needed, and timestamps from the audit log.
+- **Arithmetic shown, not just judged:** every check is written out with the sheet's own figures, so anyone can see why a sheet was flagged.
 - **Report tracking:** every dispute gets a reference; its public status and one-line reason (chosen from a controlled list) are visible without names or figures.
 - **"How results are counted"** explainer on the web and over USSD.
 - No turnout nudges, no targeting, the same content for everyone. The PoC measures nothing about trust or turnout; [`results/REPORT.md`](results/REPORT.md) proposes a pilot design.
@@ -141,8 +142,31 @@ Full tables with 95% bootstrap intervals: [`results/REPORT.md`](results/REPORT.m
 - USSD needs a telecom aggregator, a shortcode and regulatory approval; none is connected. The SMS channel is a stub; nothing is sent.
 - The "how results are counted" text is a general description to be checked against INEC's published procedures.
 
+## Repository guide
+
+| Read this | For |
+|---|---|
+| [`results/REPORT.md`](results/REPORT.md) | Every measured result, with intervals, n and caveats |
+| [`docs/MODEL_CARD.md`](docs/MODEL_CARD.md) | The reader: model, data, accuracy, failure modes, human oversight |
+| [`docs/THREAT_MODEL.md`](docs/THREAT_MODEL.md) | Abuse cases, mitigations and residual risks |
+| [`docs/PRIVACY.md`](docs/PRIVACY.md) | What data is held, how phone numbers and real sheets are handled |
+| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Components, data flow and scaling |
+| [`docs/DEMO_SCRIPT.md`](docs/DEMO_SCRIPT.md) | A 3-minute walkthrough with exact clicks |
+| [`docs/ASSUMPTIONS.md`](docs/ASSUMPTIONS.md) | Every design decision and why |
+
+| Code | What it holds |
+|---|---|
+| `naijawatchtower/ocr/` | Sheet reader: local VLM, grammar-constrained decoding, confidence and alternatives, cache replay |
+| `naijawatchtower/validate/` | Arithmetic rules, constraint-aware decoding (best-first search), routing |
+| `naijawatchtower/api/` | FastAPI app, database, GPU job queue, verification and review, audit chain, USSD state machine |
+| `naijawatchtower/web/` | Pages, server-rendered map, equation panel and journey stepper, translations (`i18n/`) |
+| `naijawatchtower/sim/`, `redact/`, `eval/` | Simulated records, redaction of real sheets, labelling and evaluation |
+| `config/` | Fields, states, rules, thresholds, model settings |
+| `scripts/` | Demo seeding, labelling, redaction, evaluation, screenshots |
+| `tests/` | 88 tests, no GPU needed |
+
 ## Data and credits
 
 - State boundaries: [geoBoundaries](https://www.geoboundaries.org) ADM1 for Nigeria (data from GRID3), **CC BY 4.0**, simplified for this project.
 - HTMX 2.0.11 (0BSD), vendored. Models: Qwen3-VL-8B-Instruct and Qwen3.5-9B (Apache-2.0).
-- Licence: MIT.
+- Licence: [MIT](LICENSE).

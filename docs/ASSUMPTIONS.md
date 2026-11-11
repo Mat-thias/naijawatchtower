@@ -95,6 +95,12 @@ Every decision taken without explicit instruction, with its reason. Matthias can
 | D37 | An `/upload` page for the ingest role (not in the spec's page list) posts to the same ingest path as `POST /sheets`. | Needed for `make demo-live`, where a redacted copy is read on the GPU on camera. |
 | D38 | Web forms rely on `SameSite=Lax` session cookies; there are no CSRF tokens in the PoC. | Proportionate for a local demo; recorded as a residual risk in THREAT_MODEL. |
 
+## UI redesign (11 Nov 2026)
+
+| id | decision | reason |
+|---|---|---|
+| D48 | Ideas from Matthias's UI mockup were ported into the real app (green header, progress tiles, review cards, equation panel, journey stepper, audit chain view), with corrections: every figure comes from the database (no invented national totals); no imitation of an official INEC form or serial number; no "apply suggestion and verify" (suggestions stay suggestions); item numbering follows the form; no CDN, icon font or web font; the real 37-state map stays; no image bounding boxes, because the model does not report where on the sheet each figure is. | Keeps the stronger visual design while respecting rules 2, 3, 5 and 7 and the application's commitment not to misrepresent capabilities. |
+
 ## M1 smoke results (10 Nov 2026; engineering checks, not reported metrics)
 
 - Both candidates load in 4-bit and produce schema-valid output on 3/3 real sheets: Qwen3.5-9B 10.5–12 s/sheet, peak 8.2 GB; Qwen3-VL-8B-Instruct 8.6–9.3 s/sheet, peak 6.8 GB (1.6 MP image budget, zero-shot, ~1,950–1,970 input tokens).
