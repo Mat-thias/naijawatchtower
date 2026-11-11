@@ -2,7 +2,7 @@
 
 **Checkable text from polling-unit result sheets: read by a local model, checked by arithmetic, confirmed by the people who were there.**
 
-> **UNOFFICIAL.** NaijaWatchTower is a proof of concept for the #AI4Elections Hackathon. It never declares results: only INEC declares official results. It has no integration with, approval from, or endorsement by INEC or any partner. The demo runs on **clearly labelled simulated records** (plus redacted real sheets on the author's machine only).
+> **UNOFFICIAL.** NaijaWatchTower is a proof of concept for the #AI4Elections Hackathon. It never declares results: only INEC declares official results. It has no integration with, approval from, or endorsement by INEC or any partner. The demo and every screenshot here use **clearly labelled simulated records** with fictional parties. Real result sheets were used only privately, to measure reading accuracy, and are never published.
 
 ![Dashboard: national map shaded by digitisation progress, with unofficial and demo-data banners](docs/img/01-dashboard.png)
 
@@ -19,9 +19,45 @@ NaijaWatchTower:
 5. **Shows progress on a national map** (digitised, verified, discrepancies, never votes for any party) with drill-down from state to LGA, ward, unit and sheet, every figure linked to its source image.
 6. **Records every action in a hash-chained audit log** and exports discrepancies as a report, subject to INEC's written authorisation.
 
-| Sheet page: rule check and a suggested alternative reading | Review queue, highest risk first |
+## See it without running it
+
+All screenshots come from the demo (simulated records, fictional parties A–R). They can be regenerated with `scripts/make_screenshots.py`.
+
+**1. The map shows progress, never votes.** Choose a layer: sheets digitised, share verified, open discrepancies or accreditation. Hatching means no data yet; each state is a link, with the same values in a table below the map.
+
+![Map on the "verified or reviewed" layer, with hatched states that have no sheets yet](docs/img/07-map-verified-layer.png)
+
+**2. Drill down from a state** to its local government areas, wards, polling units and sheets. Party totals appear only for simulated records, listed alphabetically and given three ways (verified only, reviewed, all digitised), never merged.
+
+![State page for Edo: progress tiles, local government areas and party totals for simulated records](docs/img/08-state-drilldown.png)
+
+**3. Every sheet shows its figures, confidence and arithmetic checks.** When the figures do not add up, the system searches for the most probable reading that would, and offers it to a reviewer as a *possible alternative reading*. It is never applied automatically.
+
+![Sheet page: a failed rule in plain language and a suggested alternative reading](docs/img/02-sheet-suggestion.png)
+
+**4. People at the polling unit confirm or dispute** what was recorded, and can propose a corrected figure. Only counts are shown, never identities, and every report gets a reference number to track.
+
+![Citizen view of a sheet: figures, checks, and the confirm-or-dispute form with the result's journey](docs/img/09-citizen-verify.png)
+
+**5. On any basic phone via USSD**, without a smartphone or data: register to a unit, read its figures and confirm in a few key presses. These are the real screens produced by the USSD handler; every one fits 160 characters.
+
+![A USSD session in nine screens: menu, register, SMS opt-in, three pages of figures, the question, and the confirmation](docs/img/06-ussd-flow.png)
+
+**6. Reviewers work through a queue sorted by risk**, and must choose a reason for every decision. Disputed and rule-breaking sheets come first.
+
+![Review queue sorted by risk](docs/img/03-review-queue.png)
+
+**7. Discrepancies are flags for human review, not accusations.** They can be filtered and exported as CSV or JSON, as a report subject to INEC's written authorisation.
+
+![Discrepancies page with filters and export buttons](docs/img/04-discrepancies.png)
+
+**8. Every action is hash-chained**, so any later edit to the log is detectable.
+
+![Audit log: chain intact and the latest entries](docs/img/10-audit-log.png)
+
+| **9. In Pidgin (draft)**, with English, and Hausa, Yoruba and Igbo files ready for translators | **10. On a phone browser** |
 |---|---|
-| ![Sheet page](docs/img/02-sheet-suggestion.png) | ![Review queue](docs/img/03-review-queue.png) |
+| ![The "how results are counted" explainer in Pidgin](docs/img/11-explainer-pidgin.png) | ![Dashboard on a narrow phone screen](docs/img/05-mobile.png) |
 
 ## Quickstart (no GPU needed)
 

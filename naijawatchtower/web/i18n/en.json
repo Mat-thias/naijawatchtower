@@ -261,5 +261,6 @@
  "web.upload.unit": "Polling unit",
  "web.upload.waiting": "awaiting its sheet",
  "web.upload.file": "Image (JPEG or PNG, up to 8 MB)",
- "web.upload.submit": "Upload and read"
+ "web.upload.submit": "Upload and read",
+ "web.verify.submit": "Send my check"
 }

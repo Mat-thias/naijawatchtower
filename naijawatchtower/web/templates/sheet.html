@@ -85,7 +85,7 @@
       <label for="cv" class="small">{{ t('web.verify.correction_value') }}</label>
       <input id="cv" name="correction_value" type="number" min="0" max="9999" inputmode="numeric" style="width:8em"></p>
     <p><label for="cm">{{ t('web.verify.comment') }}</label><br><textarea id="cm" name="comment" rows="2" cols="40" maxlength="500"></textarea></p>
-    <button type="submit">{{ t('web.verify.title') | replace('?', '') }} →</button>
+    <button type="submit">{{ t('web.verify.submit') }}</button>
   </fieldset>
 </form>
 {% elif can_verify == 'sign_in' %}<p class="muted">{{ t('web.verify.sign_in') }} <a href="/login?next=/sheet/{{ s.id }}">{{ t('web.nav.login') }}</a></p>

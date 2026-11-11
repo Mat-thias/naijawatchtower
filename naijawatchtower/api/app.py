@@ -354,6 +354,8 @@ def journey(db: Session, sheet: ResultSheet) -> list[dict[str, str]]:
               "discrepancy_opened": "Discrepancy opened for review"}
     steps: list[dict[str, str]] = []
     first_verification = None
+    if sheet.source == "simulated":
+        labels["sheet_uploaded"] = "Simulated record created (no photo)"
     for row in db.execute(select(AuditLog).where(AuditLog.sheet_id == sheet.id).order_by(AuditLog.id)).scalars():
         if row.action in labels:
             steps.append({"step": labels[row.action], "ts": row.ts})

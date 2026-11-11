@@ -48,7 +48,8 @@ def register(app: FastAPI) -> None:
     get_db, current_user = app.state.get_db, app.state.current_user
 
     def lang_of(request: Request) -> str:
-        lang = request.cookies.get("lang", "en")
+        """Language from ?lang= (shareable links) or the lang cookie; English otherwise."""
+        lang = request.query_params.get("lang") or request.cookies.get("lang", "en")
         return lang if lang in LANGUAGES else "en"
 
     def render(request: Request, name: str, user: User | None, active: str | None = None,

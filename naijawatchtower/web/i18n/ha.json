@@ -261,5 +261,6 @@
  "web.upload.unit": "",
  "web.upload.waiting": "",
  "web.upload.file": "",
- "web.upload.submit": ""
+ "web.upload.submit": "",
+ "web.verify.submit": ""
 }

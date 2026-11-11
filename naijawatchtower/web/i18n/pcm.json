@@ -121,5 +121,6 @@
  "web.how.p4": "E dey read di numbers from di photo, check say di sum correct as di form talk, send sheet wey no clear go meet person, and make people wey register for di unit compare am with di sheet wey dem paste and report if something different.",
  "web.how.p5_h": "5. Wetin dis tool no dey do",
  "web.how.p5": "E no dey declare result. Na only INEC dey declare official result. Di numbers here na unofficial.",
- "web.how.caveat": "Dis na general explanation. Dem must check am against INEC procedure before anybody use am for real."
+ "web.how.caveat": "Dis na general explanation. Dem must check am against INEC procedure before anybody use am for real.",
+ "web.verify.submit": "Send am"
 }
